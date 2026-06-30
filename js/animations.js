@@ -283,8 +283,20 @@ var PageTransitions = (function() {
     });
   }
 
+  // 全局标志：跳过 stagger 动画（用于已访问过的页面）
+  var _skipStagger = false;
+  function setSkipStagger(val) { _skipStagger = val; }
+  function getSkipStagger() { return _skipStagger; }
+
   function staggerItems(selector, parent, delay) {
     if (!window.gsap) return;
+    // 如果全局标志要求跳过动画，直接设置最终状态
+    if (_skipStagger) {
+      var container = parent || document;
+      var items = container.querySelectorAll(selector);
+      if (items.length) gsap.set(items, { opacity: 1, y: 0 });
+      return;
+    }
     var container = parent || document;
     var items = container.querySelectorAll(selector);
     if (!items.length) return;
@@ -412,7 +424,9 @@ var PageTransitions = (function() {
     fadeIn: fadeIn,
     staggerItems: staggerItems,
     prepareStagger: prepareStagger,
-    pageTransition: pageTransition
+    pageTransition: pageTransition,
+    setSkipStagger: setSkipStagger,
+    getSkipStagger: getSkipStagger
   };
 })();
 

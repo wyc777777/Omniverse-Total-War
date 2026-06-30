@@ -174,6 +174,7 @@ function updatePageState(name) {
 var _showPageTimer = null;
 var _lastPendingPage = null;
 var _lastPendingData = null;
+var _enteredPages = {};  // 记录已首次进入的页面，避免重复播放入场动画
 
 function showPage(name, data) {
   // 防抖：快速连续点卡片只处理最后一次
@@ -261,6 +262,12 @@ function _doShowPage(name, data) {
     syncPanelManagerState(name, data);
   }
 
+  // 进入任何页面时，先阻止 buildContent 内的 stagger 动画
+  //（因为 buildShop 等函数内部会调用 staggerItems，导致卡片跳动）
+  if (window.PageTransitions && window.PageTransitions.setSkipStagger) {
+    window.PageTransitions.setSkipStagger(true);
+  }
+
   if (window.PageTransitions && oldEl && newEl && currentPage && window.gsap) {
     var prepPage = document.getElementById('pagePrep');
     if (prepPage) prepPage.classList.remove('no-gsap');
@@ -269,7 +276,7 @@ function _doShowPage(name, data) {
     var _reflow = newEl.offsetHeight;
 
     var contentSelectors = getContentSelectors();
-    if (contentSelectors) {
+    if (contentSelectors && !_enteredPages[name]) {
       var items = newEl.querySelectorAll(contentSelectors);
       if (items.length) gsap.set(items, { opacity: 0, y: 12 });
     }
@@ -277,7 +284,20 @@ function _doShowPage(name, data) {
     PageTransitions.pageTransition(oldEl, newEl, {
       onVisible: function() {},
       onComplete: function() {
-        playEntrance();
+        // 首次进入：播放 stagger 入场动画
+        if (!_enteredPages[name]) {
+          _enteredPages[name] = true;
+          // 重置 skipStagger，让 playEntrance 中的 staggerItems 正常执行
+          if (window.PageTransitions && window.PageTransitions.setSkipStagger) {
+            window.PageTransitions.setSkipStagger(false);
+          }
+          playEntrance();
+        } else {
+          // 再次进入：保持 skipStagger=true，不做任何动画
+          if (window.PageTransitions && window.PageTransitions.setSkipStagger) {
+            window.PageTransitions.setSkipStagger(false);
+          }
+        }
         updateState();
         startShowPageCooldown(name);
       }
@@ -289,6 +309,11 @@ function _doShowPage(name, data) {
     if (newEl) newEl.classList.add('active');
     buildContent();
     applyPageWallpaper(name);
+    _enteredPages[name] = true;
+    // 重置跳过标志
+    if (window.PageTransitions && window.PageTransitions.setSkipStagger) {
+      window.PageTransitions.setSkipStagger(false);
+    }
     updateState();
     startShowPageCooldown(name);
   }
