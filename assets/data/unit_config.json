@@ -1,0 +1,255 @@
+{
+  "_system": "兵团 = 种族基底属性 + 装备属性叠加。最终属性 = SUM(种族, 主武器, 盾牌, 护甲, 坐骑)",
+  "_note": "AI 提示：本文件与 js/fallback-data.js 的 UD.units 关联，如若修改，必须同时修改 fallback 文件保持一致",
+  "units": [
+    {
+      "id": "01",
+      "tier": "bronze",
+      "name": "磐石重步兵团",
+      "race": { "id": "human", "name": "人族" },
+      "background": "源自中土大陆人类正统野战军事体系，边境常驻主力兵团，曾在西风平原合围战中坚守三昼夜",
+      "belief": "恪守\"阵存人存、阵破人亡\"信念",
+      "type": "infantry",
+      "typeName": "步兵",
+      "image": "assets/images/icon_bronze_melee.png",
+      "icon": "🛡️",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W002", "shield": null, "armor": "A002", "mount": null }
+    },
+    {
+      "id": "02",
+      "tier": "bronze",
+      "name": "暴风骑兵团",
+      "race": { "id": "human", "name": "人族" },
+      "background": "人类王国皇家近卫骑兵部队，曾在河谷战役中以侧翼冲锋击溃三倍于己的敌军",
+      "belief": "崇尚速度与冲击力",
+      "type": "cavalry",
+      "typeName": "骑兵",
+      "image": "assets/images/icon_bronze_cavalry.png",
+      "icon": "🐴",
+      "unitCount": 40,
+      "equipment": { "mainWeapon": "W001", "shield": "S001", "armor": "A012", "mount": "M002" }
+    },
+    {
+      "id": "03",
+      "tier": "iron",
+      "name": "鹰眼弓箭手兵团",
+      "race": { "id": "elf", "name": "精灵族" },
+      "background": "来自远古精灵森林的远程狙击部队，擅长丛林与平原远程作战",
+      "belief": "崇尚精准与隐蔽",
+      "type": "archer",
+      "typeName": "远程兵",
+      "image": "assets/images/icon_iron_ranged.png",
+      "icon": "🏹",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W004", "shield": null, "armor": "A004", "mount": null }
+    },
+    {
+      "id": "04",
+      "tier": "bronze",
+      "name": "雷霆狮鹫空军兵团",
+      "race": { "id": "human", "name": "人族" },
+      "background": "人类王国空中主力部队，狮鹫骑手组成的空中突击兵团",
+      "belief": "崇尚空中制霸权",
+      "type": "flying",
+      "typeName": "空军",
+      "image": "assets/images/icon_bronze_flying.png",
+      "icon": "🦅",
+      "unitCount": 32,
+      "equipment": { "mainWeapon": "W001", "shield": null, "armor": "A013", "mount": "M011" }
+    },
+    {
+      "id": "05",
+      "tier": "iron",
+      "name": "农民步兵团",
+      "race": { "id": "human", "name": "人族" },
+      "background": "临时征召的乡勇农夫，仅经过最基础的队列训练，装备简陋士气低落",
+      "belief": "保家卫乡，但更想活着回家种地",
+      "type": "peasant_infantry",
+      "typeName": "农民步兵",
+      "image": "assets/images/icon_iron_melee.png",
+      "icon": "🔰",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W016", "shield": null, "armor": "A015", "mount": null }
+    },
+    {
+      "id": "06",
+      "tier": "iron",
+      "name": "农民弓兵团",
+      "race": { "id": "human", "name": "人族" },
+      "background": "临时配发猎弓或投石索的平民，射术粗糙但胜在人多势众",
+      "belief": "射得中就算赚了",
+      "type": "peasant_archer",
+      "typeName": "农民弓兵",
+      "image": "assets/images/icon_iron_ranged.png",
+      "icon": "🔰",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W017", "shield": null, "armor": "A014", "mount": null }
+    },
+    {
+      "id": "07",
+      "tier": "iron",
+      "name": "战犬侦查营",
+      "race": { "id": "war_dog", "name": "战犬" },
+      "background": "军犬营选拔的精锐战犬，速度极快，擅长侦察和骚扰",
+      "belief": "忠诚于主人，勇猛无畏",
+      "type": "beast_infantry",
+      "typeName": "野兽步兵",
+      "image": "assets/images/icon_iron_beast.png",
+      "icon": "🐺",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": null, "shield": null, "armor": null, "mount": null }
+    },
+    {
+      "id": "08",
+      "tier": "bronze",
+      "name": "精锐弩兵兵团",
+      "race": { "id": "human", "name": "人族" },
+      "background": "王国精锐弩兵营训练出的远程精锐，装备钢弩，能在近战干扰下持续射击",
+      "belief": "精准至上，近战不退",
+      "type": "elite_archer",
+      "typeName": "远程兵",
+      "image": "assets/images/icon_bronze_ranged.png",
+      "icon": "🏹",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W005", "shield": null, "armor": "A004", "mount": null }
+    }
+  ],
+  "enemyUnits": [
+    {
+      "id": "EA01",
+      "tier": "iron",
+      "name": "蛮族步卒",
+      "race": { "id": "human", "name": "人族" },
+      "type": "infantry",
+      "typeName": "步兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W016", "shield": null, "armor": "A015", "mount": null }
+    },
+    {
+      "id": "EA02",
+      "tier": "iron",
+      "name": "猎弓手",
+      "race": { "id": "human", "name": "人族" },
+      "type": "archer",
+      "typeName": "远程兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W017", "shield": null, "armor": "A014", "mount": null }
+    },
+    {
+      "id": "EA03",
+      "tier": "iron",
+      "name": "轻骑斥候",
+      "race": { "id": "human", "name": "人族" },
+      "type": "cavalry",
+      "typeName": "骑兵",
+      "unitCount": 80,
+      "equipment": { "mainWeapon": "W001", "shield": null, "armor": "A001", "mount": "M001" }
+    },
+    {
+      "id": "EB01",
+      "tier": "bronze",
+      "name": "铁卫步兵",
+      "race": { "id": "human", "name": "人族" },
+      "type": "infantry",
+      "typeName": "步兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W020", "shield": "S004", "armor": "A016", "mount": null }
+    },
+    {
+      "id": "EB02",
+      "tier": "bronze",
+      "name": "神射手",
+      "race": { "id": "elf", "name": "精灵族" },
+      "type": "archer",
+      "typeName": "远程兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W004", "shield": null, "armor": "A016", "mount": null }
+    },
+    {
+      "id": "EB03",
+      "tier": "bronze",
+      "name": "铁甲骑士",
+      "race": { "id": "human", "name": "人族" },
+      "type": "cavalry",
+      "typeName": "骑兵",
+      "unitCount": 40,
+      "equipment": { "mainWeapon": "W019", "shield": "S004", "armor": "A012", "mount": "M002" }
+    },
+    {
+      "id": "EC01",
+      "tier": "gold",
+      "name": "皇家铁卫",
+      "race": { "id": "human", "name": "人族" },
+      "type": "infantry",
+      "typeName": "步兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W021", "shield": "S005", "armor": "A017", "mount": null }
+    },
+    {
+      "id": "EC02",
+      "tier": "gold",
+      "name": "龙骑士",
+      "race": { "id": "human", "name": "人族" },
+      "type": "flying",
+      "typeName": "空军",
+      "unitCount": 32,
+      "equipment": { "mainWeapon": "W021", "shield": null, "armor": "A018", "mount": "M016" }
+    },
+    {
+      "id": "EC03",
+      "tier": "gold",
+      "name": "战狼群",
+      "race": { "id": "war_wolf", "name": "战狼" },
+      "type": "beast_infantry",
+      "typeName": "野兽步兵",
+      "unitCount": 80,
+      "equipment": { "mainWeapon": null, "shield": null, "armor": "A018", "mount": null }
+    }
+  ],
+  "enemySets": [
+    {
+      "id": "setA",
+      "name": "蛮族入侵",
+      "tier": "iron",
+      "difficulty": "easy",
+      "units": ["EA01", "EA02", "EA03"]
+    },
+    {
+      "id": "setB",
+      "name": "精锐远征",
+      "tier": "bronze",
+      "difficulty": "hard",
+      "units": ["EB01", "EB02", "EB03"]
+    },
+    {
+      "id": "setC",
+      "name": "王牌压制",
+      "tier": "gold",
+      "difficulty": "extreme",
+      "units": ["EC01", "EC02", "EC03"]
+    }
+  ],
+  "difficulty": {
+    "easy": {
+      "label": "低",
+      "enemy": ["peasant_infantry","peasant_infantry","peasant_infantry","peasant_archer","peasant_archer","peasant_archer"]
+    },
+    "medium": {
+      "label": "中",
+      "enemy": ["peasant_infantry","peasant_infantry","infantry","peasant_archer","peasant_archer","archer"]
+    },
+    "hard": {
+      "label": "高",
+      "enemy": ["infantry","infantry","cavalry","cavalry","archer","flying"]
+    },
+    "extreme": {
+      "label": "极难",
+      "enemy": ["infantry","infantry","infantry","cavalry","cavalry","cavalry","archer","archer","flying","flying"]
+    }
+  },
+  "defaultBench": {
+    "player": ["infantry","infantry","infantry","cavalry","cavalry","cavalry","archer","archer","flying","flying"],
+    "enemy": ["infantry","infantry","infantry","cavalry","cavalry","cavalry","archer","archer","flying","flying"]
+  }
+}

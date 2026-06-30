@@ -1,0 +1,89 @@
+{
+  "_note": "AI 提示：本文件与 js/fallback-data.js 的 RD.races 关联，如若修改，必须同时修改 fallback 文件保持一致",
+  "races": [
+    {
+      "id": "human",
+      "name": "人类",
+      "scale": 1,
+      "typeLabel": "常规体型",
+      "baseHP": 100,
+      "naturalArmor": 3,
+      "naturalWeapon": 3,
+      "baseMorale": 60,
+      "baseMovement": 1,
+      "attackRange": 1,
+      "description": "人类意志坚定，纪律性强，单体属性和机动性均衡，是战场上最可靠的基石兵团",
+      "poolCount": 100
+    },
+    {
+      "id": "elf",
+      "name": "精灵",
+      "scale": 1,
+      "typeLabel": "常规体型",
+      "baseHP": 85,
+      "naturalArmor": 2,
+      "naturalWeapon": 3,
+      "baseMorale": 65,
+      "baseMovement": 1,
+      "attackRange": 1,
+      "description": "精灵体质偏纤弱，但精神坚韧、长寿带来沉稳，可通过种族天赋或装备进一步提升机动性",
+      "poolCount": 100
+    },
+    {
+      "id": "war_dog",
+      "name": "战犬",
+      "scale": 1,
+      "typeLabel": "小型野兽",
+      "baseHP": 60,
+      "naturalArmor": 2,
+      "naturalWeapon": 8,
+      "baseMorale": 45,
+      "baseMovement": 2,
+      "attackRange": 1,
+      "description": "训练有素的军犬，速度快、咬合力强，是轻步兵的噩梦",
+      "poolCount": 60
+    },
+    {
+      "id": "war_wolf",
+      "name": "战狼",
+      "scale": 2,
+      "typeLabel": "中型野兽",
+      "baseHP": 90,
+      "naturalArmor": 4,
+      "naturalWeapon": 12,
+      "baseMorale": 55,
+      "baseMovement": 2,
+      "attackRange": 1,
+      "description": "凶猛的巨狼，成群结队时更为恐怖，撕咬能穿透轻甲",
+      "poolCount": 40
+    },
+    {
+      "id": "falcon",
+      "name": "猎鹰",
+      "scale": 1,
+      "typeLabel": "飞行野兽",
+      "baseHP": 45,
+      "naturalArmor": 1,
+      "naturalWeapon": 10,
+      "baseMorale": 50,
+      "baseMovement": 3,
+      "attackRange": 1,
+      "description": "俯冲攻击的猛禽，利爪可撕裂皮肉，机动性极强",
+      "poolCount": 30
+    },
+    {
+      "id": "darkborn",
+      "name": "暗裔",
+      "scale": 1,
+      "typeLabel": "常规体型",
+      "baseHP": 120,
+      "naturalArmor": 4,
+      "naturalWeapon": 4,
+      "baseMorale": 70,
+      "baseMovement": 1,
+      "attackRange": 1,
+      "description": "来自暗影深渊的邪恶种族，肉体强悍且意志冰冷，天生擅长杀戮与毁灭",
+      "poolCount": 50
+    }
+  ]
+}

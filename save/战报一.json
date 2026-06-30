@@ -1,0 +1,66 @@
+{
+  "saveName": "战报一",
+  "version": 4,
+  "playerUnits": [
+    {
+      "type": "peasant_archer",
+      "name": "农民弓兵团",
+      "id": "u_1782777166943_85157_init_0"
+    },
+    {
+      "type": "cavalry",
+      "name": "暴风骑兵团",
+      "id": "u_1782777166943_85157_init_1"
+    },
+    {
+      "type": "elite_archer",
+      "name": "精锐弩兵兵团",
+      "id": "u_1782777166943_85157_init_2"
+    },
+    {
+      "type": "beast_infantry",
+      "name": "战犬侦查营",
+      "id": "u_1782777166943_85157_init_3"
+    },
+    {
+      "type": "infantry",
+      "name": "磐石重步兵团",
+      "id": "u_1782777166943_85157_init_4"
+    },
+    {
+      "type": "flying",
+      "name": "雷霆狮鹫空军兵团",
+      "id": "u_1782777166943_85157_init_5"
+    },
+    {
+      "id": "s_1782777580739_k70w",
+      "type": "infantry_U103_gr21",
+      "name": "朔方铁甲卫"
+    }
+  ],
+  "points": 548,
+  "timestamp": "2026-06-30T00:18:34.204Z",
+  "inventory": {
+    "weapons": [],
+    "shields": [],
+    "armors": [],
+    "mounts": []
+  },
+  "_summonHistory": [
+    {
+      "cost": 600,
+      "name": "朔方铁甲卫",
+      "type": "infantry",
+      "time": "07:59:40"
+    }
+  ],
+  "summonModel": "deepseek-v4-flash",
+  "completedLevels": {
+    "easy_1": {
+      "completed": true,
+      "firstClearTime": 1782777399730
+    }
+  },
+  "name": "战报一",
+  "_serverSavedAt": "2026-06-30T00:18:34.234Z"
+}

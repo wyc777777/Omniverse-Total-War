@@ -1,0 +1,13 @@
+{
+  "name": "hex-game",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.0",
+    "multer": "^2.2.0",
+    "playwright": "^1.61.1"
+  }
+}

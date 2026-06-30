@@ -1,0 +1,108 @@
+{
+  "races": [
+    {
+      "id": "race_1782777567885_uak12z",
+      "_baseId": "humanoid_ancient_china_汉军步卒",
+      "_isBeast": false,
+      "_worldKey": "ancient_china",
+      "_worldName": "中国古代",
+      "name": "汉军步卒",
+      "scale": 1,
+      "baseHP": 86,
+      "naturalArmor": 3,
+      "naturalWeapon": 2,
+      "baseMorale": 51,
+      "baseMovement": 1,
+      "attackRange": 1,
+      "typeLabel": "常规体型",
+      "_summoned": true
+    }
+  ],
+  "weapons": [
+    {
+      "id": "SW100_uznn",
+      "name": "百炼环首刀",
+      "tier": "bronze",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "one-handed",
+      "slot": "main",
+      "baseDamage": 14,
+      "armorPierce": 4,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [
+        "无"
+      ],
+      "desc": "百锻精钢，刀背厚实，专为步战格挡而铸",
+      "_summoned": true
+    }
+  ],
+  "shields": [
+    {
+      "id": "SH101_jn60",
+      "name": "虎纹大盾",
+      "category": "盾牌",
+      "tier": "bronze",
+      "defense": 3,
+      "forUnits": [
+        "全兵种"
+      ],
+      "effects": [
+        "远程免伤+30%"
+      ],
+      "desc": "虎纹大盾（青铜召唤品阶召唤）",
+      "_summoned": true
+    }
+  ],
+  "armors": [
+    {
+      "id": "SA102_5efe",
+      "name": "玄甲扎铠",
+      "tier": "bronze",
+      "category": "中甲",
+      "defense": 12,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "全兵种"
+      ],
+      "effects": [],
+      "desc": "鱼鳞式铁片编缀，防护层层交叠",
+      "_summoned": true
+    }
+  ],
+  "mounts": [],
+  "units": [
+    {
+      "id": "U103_gr21",
+      "name": "朔方铁甲卫",
+      "race": {
+        "id": "race_1782777567885_uak12z",
+        "name": "汉军步卒"
+      },
+      "background": "大梁城外，七十六步卒以血肉之躯连挡北狄铁骑三波冲击，战后半数人甲胄碎裂、刀身卷刃，却无一人撤出阵线。",
+      "belief": "铁脊如山，一步不退",
+      "type": "infantry_U103_gr21",
+      "baseType": "infantry",
+      "typeName": "步兵",
+      "image": "assets/images/icon_ink_melee.png",
+      "icon": "🛡️",
+      "unitCount": 160,
+      "equipment": {
+        "mainWeapon": "SW100_uznn",
+        "shield": "SH101_jn60",
+        "armor": "SA102_5efe",
+        "mount": null
+      },
+      "_summoned": true,
+      "_summonTier": 2,
+      "powerIndex": 42
+    }
+  ],
+  "_savedAt": "2026-06-30T00:02:43.567Z"
+}

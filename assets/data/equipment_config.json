@@ -1,0 +1,1286 @@
+{
+  "_note": "AI 提示：本文件与 js/fallback-data.js 关联，如若修改，必须同时修改 fallback 文件保持一致",
+  "weapons": [
+    {
+      "id": "W001",
+      "tier": "iron",
+      "name": "制式精铁长剑",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "one-handed",
+      "slot": "main",
+      "baseDamage": 13,
+      "armorPierce": 3,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [],
+      "desc": "人族常规步兵标配，单手剑+盾组合"
+    },
+    {
+      "id": "W002",
+      "tier": "iron",
+      "name": "制式精铁长戈",
+      "category": "近战武器",
+      "type": "long",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 13,
+      "armorPierce": 3,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [
+        "抵御冲锋"
+      ],
+      "desc": "双手长柄武器，抵御冲锋：正面防守骑兵时清零对方冲锋动能"
+    },
+    {
+      "id": "W003",
+      "tier": "bronze",
+      "name": "重型战斧",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 21,
+      "armorPierce": 6,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵"
+      ],
+      "effects": [],
+      "desc": "双手重斧，破甲+5，兽人/野蛮人标配"
+    },
+    {
+      "id": "W004",
+      "tier": "iron",
+      "name": "精灵长弓",
+      "category": "远程武器",
+      "type": "bow",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 12,
+      "armorPierce": 2,
+      "attackRange": 1,
+      "allowedRange": 3,
+      "forUnits": [
+        "远程兵"
+      ],
+      "effects": [
+        "惧怕近身"
+      ],
+      "desc": "双手长弓，惧怕近身：相邻格有敌军时禁射"
+    },
+    {
+      "id": "W005",
+      "tier": "bronze",
+      "name": "制式钢弩",
+      "category": "远程武器",
+      "type": "crossbow",
+      "handed": "one-handed",
+      "slot": "main",
+      "baseDamage": 15,
+      "armorPierce": 4,
+      "attackRange": 1,
+      "allowedRange": 2,
+      "forUnits": [
+        "远程兵"
+      ],
+      "effects": [
+        "无视近战干扰"
+      ],
+      "desc": "单手钢弩，无视近战干扰：相邻格有敌军仍可射击"
+    },
+    {
+      "id": "W006",
+      "tier": "bronze",
+      "name": "重型攻城弩",
+      "category": "远程武器",
+      "type": "crossbow",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 18,
+      "armorPierce": 5,
+      "attackRange": 1,
+      "allowedRange": 3,
+      "forUnits": [
+        "远程兵"
+      ],
+      "effects": [
+        "重甲克制",
+        "无视近战干扰"
+      ],
+      "desc": "双手重弩，重甲克制：攻击护甲≥30目标时伤害×1.2，无视近战干扰"
+    },
+    {
+      "id": "W009",
+      "tier": "iron",
+      "name": "精灵短剑",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "one-handed",
+      "slot": "main",
+      "baseDamage": 13,
+      "armorPierce": 3,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "远程兵",
+        "步兵"
+      ],
+      "effects": [],
+      "desc": "单手短剑，远程兵应急近战装备"
+    },
+    {
+      "id": "W010",
+      "tier": "iron",
+      "name": "兽人双刃斧",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 15,
+      "armorPierce": 4,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [],
+      "desc": "兽人双手短斧，劈砍威力巨大"
+    },
+    {
+      "id": "W011",
+      "tier": "iron",
+      "name": "矮人战锤",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 15,
+      "armorPierce": 4,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [],
+      "desc": "矮人工匠打造的双手重锤"
+    },
+    {
+      "id": "W012",
+      "tier": "iron",
+      "name": "亡灵骨弓",
+      "category": "远程武器",
+      "type": "bow",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 12,
+      "armorPierce": 2,
+      "attackRange": 1,
+      "allowedRange": 3,
+      "forUnits": [
+        "远程兵"
+      ],
+      "effects": [
+        "惧怕近身"
+      ],
+      "desc": "双手骨弓，亡灵族远程标配"
+    },
+    {
+      "id": "W013",
+      "tier": "iron",
+      "name": "魅魔皮鞭",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "one-handed",
+      "slot": "main",
+      "baseDamage": 13,
+      "armorPierce": 3,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [],
+      "desc": "单手皮鞭，魅魔专属近战武器"
+    },
+    {
+      "id": "W014",
+      "tier": "iron",
+      "name": "巨人木棒",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 15,
+      "armorPierce": 4,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [],
+      "desc": "巨人双手木棒，仅大型单位可装备"
+    },
+    {
+      "id": "W015",
+      "tier": "bronze",
+      "name": "龙息火枪",
+      "category": "远程武器",
+      "type": "crossbow",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 18,
+      "armorPierce": 5,
+      "attackRange": 1,
+      "allowedRange": 3,
+      "forUnits": [
+        "远程兵"
+      ],
+      "effects": [
+        "无视近战干扰"
+      ],
+      "desc": "超远程狙击火枪，附带枪刺可近战"
+    },
+    {
+      "id": "W016",
+      "tier": "iron",
+      "name": "生锈草叉",
+      "category": "近战武器",
+      "type": "long",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 8,
+      "armorPierce": 3,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [],
+      "desc": "双手长叉，农用草叉磨尖了就当武器"
+    },
+    {
+      "id": "W017",
+      "tier": "iron",
+      "name": "石块投索",
+      "category": "远程武器",
+      "type": "bow",
+      "handed": "one-handed",
+      "slot": "main",
+      "baseDamage": 6,
+      "armorPierce": 0,
+      "attackRange": 1,
+      "allowedRange": 2,
+      "forUnits": [
+        "远程兵"
+      ],
+      "effects": [
+        "惧怕近身"
+      ],
+      "desc": "单手投索，麻绳编的投索扔石头"
+    },
+    {
+      "id": "W018",
+      "tier": "iron",
+      "name": "锈镰刀",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 4,
+      "armorPierce": 1,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "远程兵"
+      ],
+      "effects": [],
+      "desc": "双手镰刀，收获用的镰刀"
+    },
+    {
+      "id": "W019",
+      "tier": "bronze",
+      "name": "青铜长剑",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "one-handed",
+      "slot": "main",
+      "baseDamage": 18,
+      "armorPierce": 5,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [],
+      "desc": "青铜锻造的单手长剑，步兵骑兵通用，破甲略胜精铁"
+    },
+    {
+      "id": "W020",
+      "tier": "bronze",
+      "name": "青铜战戟",
+      "category": "近战武器",
+      "type": "long",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 18,
+      "armorPierce": 4,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [
+        "抵御冲锋"
+      ],
+      "desc": "青铜双手长柄战戟，正面防守骑兵时可抵御冲锋"
+    },
+    {
+      "id": "W021",
+      "tier": "gold",
+      "name": "秘银长剑",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "one-handed",
+      "slot": "main",
+      "baseDamage": 23,
+      "armorPierce": 7,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [
+        "无视近战干扰"
+      ],
+      "desc": "秘银锻造的黄金单手长剑，近战时无视近战干扰"
+    },
+    {
+      "id": "W022",
+      "tier": "gold",
+      "name": "精灵神弓",
+      "category": "远程武器",
+      "type": "bow",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 21,
+      "armorPierce": 3,
+      "attackRange": 1,
+      "allowedRange": 3,
+      "forUnits": [
+        "远程兵"
+      ],
+      "effects": [
+        "惧怕近身"
+      ],
+      "desc": "精灵族黄金神弓，攻击距离极远，但惧怕近身"
+    },
+    {
+      "id": "W023",
+      "tier": "gold",
+      "name": "穿甲重弩",
+      "category": "远程武器",
+      "type": "crossbow",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 23,
+      "armorPierce": 7,
+      "attackRange": 1,
+      "allowedRange": 3,
+      "forUnits": [
+        "远程兵"
+      ],
+      "effects": [
+        "重甲克制",
+        "无视近战干扰"
+      ],
+      "desc": "黄金重弩，重甲克制且无视近战干扰，破甲利器"
+    },
+    {
+      "id": "W024",
+      "tier": "bronze",
+      "name": "精灵长矛",
+      "category": "近战武器",
+      "type": "long",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 18,
+      "armorPierce": 4,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [
+        "抵御冲锋"
+      ],
+      "desc": "精灵族双手长矛，轻盈却致命，抵御骑兵冲锋效果显著"
+    },
+    {
+      "id": "W025",
+      "tier": "bronze",
+      "name": "精灵战弓",
+      "category": "远程武器",
+      "type": "bow",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 16,
+      "armorPierce": 2,
+      "attackRange": 1,
+      "allowedRange": 3,
+      "forUnits": [
+        "远程兵",
+        "空军"
+      ],
+      "effects": [
+        "惧怕近身"
+      ],
+      "desc": "精灵族制式战弓，攻击距离与精度远超人族的同类武器"
+    },
+    {
+      "id": "W026",
+      "tier": "gold",
+      "name": "暗裔巨刃",
+      "category": "近战武器",
+      "type": "short",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 26,
+      "armorPierce": 8,
+      "attackRange": 1,
+      "allowedRange": 1,
+      "forUnits": [
+        "步兵",
+        "骑兵",
+        "空军"
+      ],
+      "effects": [],
+      "desc": "暗裔战士的双手巨刃，一击便可劈开最坚固的板甲"
+    },
+    {
+      "id": "W027",
+      "tier": "gold",
+      "name": "暗裔重弩",
+      "category": "远程武器",
+      "type": "crossbow",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 23,
+      "armorPierce": 7,
+      "attackRange": 1,
+      "allowedRange": 3,
+      "forUnits": [
+        "远程兵"
+      ],
+      "effects": [
+        "重甲克制",
+        "无视近战干扰"
+      ],
+      "desc": "暗裔军团的制式重弩，完美结合了穿甲火力和持续压制能力"
+    },
+    {
+      "id": "W028",
+      "tier": "diamond",
+      "name": "万界终结者",
+      "category": "远程武器",
+      "type": "crossbow",
+      "handed": "two-handed",
+      "slot": "main",
+      "baseDamage": 60,
+      "armorPierce": 35,
+      "attackRange": 1,
+      "allowedRange": 4,
+      "forUnits": [
+        "远程兵"
+      ],
+      "effects": [
+        "重甲克制",
+        "无视近战干扰",
+        "迅捷",
+        "骑射"
+      ],
+      "desc": "传说中终结万界的灭世重弩，迅捷灵巧，一击粉碎一切护甲。仅有通关传说终局者可获此殊荣。",
+      "_unique": true
+    }
+  ],
+  "shields": [
+    {
+      "id": "S001",
+      "tier": "bronze",
+      "name": "制式圆铁盾",
+      "category": "盾牌",
+      "defense": 2,
+      "forUnits": [
+        "全兵种"
+      ],
+      "effects": [
+        "远程免伤+25%"
+      ],
+      "desc": "步兵标配圆盾，可与单手武器配合使用"
+    },
+    {
+      "id": "S002",
+      "tier": "iron",
+      "name": "重型塔盾",
+      "category": "盾牌",
+      "defense": 5,
+      "forUnits": [
+        "步兵"
+      ],
+      "effects": [
+        "远程免伤+40%"
+      ],
+      "desc": "重步兵/枪兵标配，提供大量远程防护"
+    },
+    {
+      "id": "S003",
+      "tier": "iron",
+      "name": "木盾",
+      "category": "盾牌",
+      "defense": 1,
+      "forUnits": [
+        "步兵"
+      ],
+      "effects": [
+        "远程免伤+10%"
+      ],
+      "desc": "木板拼的简陋盾牌"
+    },
+    {
+      "id": "S004",
+      "tier": "bronze",
+      "name": "青铜鸢盾",
+      "category": "盾牌",
+      "defense": 3,
+      "forUnits": [
+        "全兵种"
+      ],
+      "effects": [
+        "远程免伤+30%"
+      ],
+      "desc": "青铜鸢盾，全兵种通用，远程免伤+30%"
+    },
+    {
+      "id": "S005",
+      "tier": "gold",
+      "name": "秘银塔盾",
+      "category": "盾牌",
+      "defense": 6,
+      "forUnits": [
+        "步兵"
+      ],
+      "effects": [
+        "远程免伤+50%",
+        "全伤害减免5%"
+      ],
+      "desc": "秘银塔盾，步兵专用，远程免伤+50%且全伤害减免5%"
+    },
+    {
+      "id": "S006",
+      "tier": "bronze",
+      "name": "精灵纹章盾",
+      "category": "盾牌",
+      "defense": 3,
+      "forUnits": [
+        "全兵种"
+      ],
+      "effects": [
+        "远程免伤+25%"
+      ],
+      "desc": "精灵族雕纹圆盾，轻盈且防护出色"
+    },
+    {
+      "id": "S007",
+      "tier": "gold",
+      "name": "暗裔铁盾",
+      "category": "盾牌",
+      "defense": 4,
+      "forUnits": [
+        "步兵"
+      ],
+      "effects": [
+        "远程免伤+35%",
+        "近战伤害减免3"
+      ],
+      "desc": "暗裔重装步兵的铁盾，同时提供远程和近战双重防护"
+    }
+  ],
+  "armors": [
+    {
+      "id": "A001",
+      "tier": "iron",
+      "name": "人族制式皮甲",
+      "category": "轻甲",
+      "defense": 7,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "远程兵",
+        "轻步兵"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "人族常规步兵标配"
+    },
+    {
+      "id": "A002",
+      "tier": "bronze",
+      "name": "人族制式锁子甲",
+      "category": "中甲",
+      "defense": 11,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "重步兵",
+        "骑兵"
+      ],
+      "forScale": [
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "人族重步兵标配"
+    },
+    {
+      "id": "A003",
+      "tier": "bronze",
+      "name": "人族制式重型板甲",
+      "category": "重甲",
+      "defense": 14,
+      "mobilityPenalty": -1,
+      "forUnits": [
+        "重步兵",
+        "枪兵"
+      ],
+      "forScale": [
+        "中型",
+        "大型"
+      ],
+      "effects": [
+        "机动惩罚"
+      ],
+      "desc": "人族精锐重步兵标配"
+    },
+    {
+      "id": "A004",
+      "tier": "iron",
+      "name": "精灵族皮甲",
+      "category": "轻甲",
+      "defense": 7,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "远程兵",
+        "轻步兵"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "精灵族标配"
+    },
+    {
+      "id": "A005",
+      "tier": "iron",
+      "name": "兽人族重型皮甲",
+      "category": "中甲",
+      "defense": 8,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "步兵",
+        "骑兵"
+      ],
+      "forScale": [
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "兽人族常规标配"
+    },
+    {
+      "id": "A006",
+      "tier": "iron",
+      "name": "兽人族重型板甲",
+      "category": "重甲",
+      "defense": 11,
+      "mobilityPenalty": -1,
+      "forUnits": [
+        "重步兵",
+        "骑兵"
+      ],
+      "forScale": [
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "兽人族精锐标配"
+    },
+    {
+      "id": "A007",
+      "tier": "iron",
+      "name": "亡灵族骨甲",
+      "category": "轻甲",
+      "defense": 7,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "全兵种"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "亡灵族标配"
+    },
+    {
+      "id": "A008",
+      "tier": "iron",
+      "name": "魅魔族皮甲",
+      "category": "轻甲",
+      "defense": 7,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "全兵种"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "魅魔族标配"
+    },
+    {
+      "id": "A009",
+      "tier": "gold",
+      "name": "龙鳞甲",
+      "category": "特殊",
+      "defense": 20,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "全兵种"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [
+        "全伤害减免10%"
+      ],
+      "desc": "传奇护甲"
+    },
+    {
+      "id": "A010",
+      "tier": "iron",
+      "name": "暗影皮甲",
+      "category": "轻甲",
+      "defense": 7,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "远程兵",
+        "刺客"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "暗夜精灵标配"
+    },
+    {
+      "id": "A011",
+      "tier": "bronze",
+      "name": "重型攻城护甲",
+      "category": "重甲",
+      "defense": 16,
+      "mobilityPenalty": -1,
+      "forUnits": [
+        "步兵"
+      ],
+      "forScale": [
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "攻城部队标配"
+    },
+    {
+      "id": "A012",
+      "tier": "iron",
+      "name": "骑兵制式胸甲",
+      "category": "中甲",
+      "defense": 8,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "骑兵"
+      ],
+      "forScale": [
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "骑兵标配"
+    },
+    {
+      "id": "A013",
+      "tier": "iron",
+      "name": "空军制式轻甲",
+      "category": "轻甲",
+      "defense": 7,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "空军"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "空军标配"
+    },
+    {
+      "id": "A014",
+      "tier": "iron",
+      "name": "粗布衣",
+      "category": "轻甲",
+      "defense": 7,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "全兵种"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "粗麻织的衣裳，挡不住刀"
+    },
+    {
+      "id": "A015",
+      "tier": "iron",
+      "name": "皮革护具",
+      "category": "轻甲",
+      "defense": 7,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "全兵种"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "硬皮革拼凑的简易护具"
+    },
+    {
+      "id": "A016",
+      "tier": "bronze",
+      "name": "青铜锁甲",
+      "category": "中甲",
+      "defense": 11,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "重步兵",
+        "骑兵",
+        "远程兵"
+      ],
+      "forScale": [
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "青铜锁子甲，重步兵骑兵远程兵通用"
+    },
+    {
+      "id": "A017",
+      "tier": "gold",
+      "name": "秘银板甲",
+      "category": "重甲",
+      "defense": 17,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "重步兵",
+        "枪兵"
+      ],
+      "forScale": [
+        "中型",
+        "大型"
+      ],
+      "effects": [
+        "全伤害减免5%"
+      ],
+      "desc": "秘银板甲，重步兵枪兵专用，全伤害减免5%"
+    },
+    {
+      "id": "A018",
+      "tier": "gold",
+      "name": "龙鳞甲",
+      "category": "中甲",
+      "defense": 14,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "全兵种"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [
+        "火焰抗性"
+      ],
+      "desc": "龙鳞锻造的黄金中甲，全兵种通用，附带火焰抗性"
+    },
+    {
+      "id": "A019",
+      "tier": "bronze",
+      "name": "精灵链甲",
+      "category": "中甲",
+      "defense": 11,
+      "mobilityPenalty": 0,
+      "forUnits": [
+        "全兵种"
+      ],
+      "forScale": [
+        "小型",
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "精灵族精工链甲，轻便而不失防护力"
+    },
+    {
+      "id": "A020",
+      "tier": "gold",
+      "name": "暗裔板甲",
+      "category": "重甲",
+      "defense": 17,
+      "mobilityPenalty": -1,
+      "forUnits": [
+        "步兵",
+        "骑兵"
+      ],
+      "forScale": [
+        "中型",
+        "大型"
+      ],
+      "effects": [],
+      "desc": "暗裔军团的厚重板甲，提供顶级防护但影响机动"
+    }
+  ],
+  "mounts": [
+    {
+      "id": "M001",
+      "tier": "iron",
+      "name": "人族轻型战马",
+      "type": "小型",
+      "scale": 1,
+      "bonusHP": 100,
+      "bonusArmor": 2,
+      "bonusMove": 2,
+      "bonusAtkRange": 0,
+      "forUnits": [
+        "轻骑兵"
+      ],
+      "effects": [],
+      "desc": "人族轻骑兵标配"
+    },
+    {
+      "id": "M002",
+      "tier": "gold",
+      "name": "人族重型战马",
+      "type": "中型",
+      "scale": 3,
+      "bonusHP": 300,
+      "bonusArmor": 5,
+      "bonusMove": 3,
+      "bonusAtkRange": 2,
+      "forUnits": [
+        "重骑兵"
+      ],
+      "effects": [],
+      "desc": "人族重骑兵标配"
+    },
+    {
+      "id": "M003",
+      "tier": "gold",
+      "name": "精灵族角鹿",
+      "type": "小型",
+      "scale": 1,
+      "bonusHP": 100,
+      "bonusArmor": 1,
+      "bonusMove": 4,
+      "bonusAtkRange": 0,
+      "forUnits": [
+        "轻骑兵",
+        "空军"
+      ],
+      "effects": [],
+      "desc": "精灵族标配"
+    },
+    {
+      "id": "M004",
+      "tier": "bronze",
+      "name": "兽人族战狼",
+      "type": "中型",
+      "scale": 2,
+      "bonusHP": 200,
+      "bonusArmor": 3,
+      "bonusMove": 3,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "骑兵"
+      ],
+      "effects": [],
+      "desc": "兽人族常规标配"
+    },
+    {
+      "id": "M005",
+      "tier": "bronze",
+      "name": "兽人族重型战熊",
+      "type": "大型",
+      "scale": 5,
+      "bonusHP": 500,
+      "bonusArmor": 8,
+      "bonusMove": 2,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "重骑兵"
+      ],
+      "effects": [],
+      "desc": "兽人族精锐标配"
+    },
+    {
+      "id": "M006",
+      "tier": "bronze",
+      "name": "矮人族战羊",
+      "type": "中型",
+      "scale": 3,
+      "bonusHP": 300,
+      "bonusArmor": 6,
+      "bonusMove": 3,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "骑兵"
+      ],
+      "effects": [],
+      "desc": "矮人族标配"
+    },
+    {
+      "id": "M007",
+      "tier": "bronze",
+      "name": "亡灵族骨马",
+      "type": "小型",
+      "scale": 1,
+      "bonusHP": 100,
+      "bonusArmor": 0,
+      "bonusMove": 3,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "骑兵"
+      ],
+      "effects": [],
+      "desc": "亡灵族标配"
+    },
+    {
+      "id": "M008",
+      "tier": "gold",
+      "name": "魅魔族梦魇马",
+      "type": "中型",
+      "scale": 3,
+      "bonusHP": 300,
+      "bonusArmor": 4,
+      "bonusMove": 4,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "骑兵"
+      ],
+      "effects": [],
+      "desc": "魅魔族标配"
+    },
+    {
+      "id": "M009",
+      "tier": "bronze",
+      "name": "巨人族猛犸象",
+      "type": "大型",
+      "scale": 7,
+      "bonusHP": 700,
+      "bonusArmor": 10,
+      "bonusMove": 2,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "重骑兵"
+      ],
+      "effects": [],
+      "desc": "巨人族标配"
+    },
+    {
+      "id": "M010",
+      "tier": "diamond",
+      "name": "龙族幼龙",
+      "type": "传奇",
+      "scale": 10,
+      "bonusHP": 1000,
+      "bonusArmor": 15,
+      "bonusMove": 5,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "空军",
+        "骑兵"
+      ],
+      "effects": [
+        "飞行能力"
+      ],
+      "desc": "传奇坐骑"
+    },
+    {
+      "id": "M011",
+      "tier": "gold",
+      "name": "人族空军狮鹫",
+      "type": "中型",
+      "scale": 4,
+      "bonusHP": 400,
+      "bonusArmor": 8,
+      "bonusMove": 3,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "空军"
+      ],
+      "effects": [
+        "飞行能力",
+        "空中震慑"
+      ],
+      "desc": "人族空军标配"
+    },
+    {
+      "id": "M012",
+      "tier": "diamond",
+      "name": "精灵族空军巨鹰",
+      "type": "中型",
+      "scale": 3,
+      "bonusHP": 300,
+      "bonusArmor": 6,
+      "bonusMove": 5,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "空军"
+      ],
+      "effects": [
+        "飞行能力",
+        "空中震慑"
+      ],
+      "desc": "精灵族空军标配"
+    },
+    {
+      "id": "M013",
+      "tier": "diamond",
+      "name": "亡灵族空军骨龙",
+      "type": "大型",
+      "scale": 8,
+      "bonusHP": 800,
+      "bonusArmor": 12,
+      "bonusMove": 3,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "空军"
+      ],
+      "effects": [
+        "飞行能力",
+        "空中震慑"
+      ],
+      "desc": "亡灵族空军标配"
+    },
+    {
+      "id": "M014",
+      "tier": "bronze",
+      "name": "战象",
+      "type": "大型",
+      "scale": 7,
+      "bonusHP": 700,
+      "bonusArmor": 10,
+      "bonusMove": 2,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "重骑兵"
+      ],
+      "effects": [],
+      "desc": "常规重型坐骑"
+    },
+    {
+      "id": "M015",
+      "tier": "gold",
+      "name": "独角兽",
+      "type": "中型",
+      "scale": 3,
+      "bonusHP": 300,
+      "bonusArmor": 5,
+      "bonusMove": 4,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "骑兵",
+        "空军"
+      ],
+      "effects": [],
+      "desc": "传奇坐骑"
+    },
+    {
+      "id": "M016",
+      "tier": "gold",
+      "name": "银翼狮鹫",
+      "type": "中型",
+      "scale": 4,
+      "bonusHP": 400,
+      "bonusArmor": 8,
+      "bonusMove": 3,
+      "bonusAtkRange": 1,
+      "forUnits": [
+        "空军"
+      ],
+      "effects": [
+        "飞行能力"
+      ],
+      "desc": "黄金品阶银翼狮鹫，空军专用飞行坐骑"
+    }
+  ]
+}

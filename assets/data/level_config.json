@@ -1,0 +1,80 @@
+{
+  "_system": "关卡系统配置：24关（简单6+中等6+困难6+传说6），每关4-8支敌军，首通可掉落装备",
+  "_note": "AI 提示：本文件与 js/fallback-data.js 的 LC.levels 关联，如若修改，必须同时修改 fallback 文件保持一致",
+  "_tierMap": {"iron":"黑铁","bronze":"青铜","gold":"黄金"},
+  "_difficultyCurve": "简单(setA蛮族)→中等(setB精灵)→困难(setC王国+暗裔)→传说(setD皇家+暗裔)",
+  "levels": [
+    {
+      "id":"easy_1","name":"蛮族前哨","difficulty":"easy","tier":"iron","enemySetId":"setA","enemyUnitIds":["EA01","EA01","EA01","EA01"],"rewardPoints":100,"guaranteedDrop":null,"desc":"蛮族步卒四散在前哨营地，正适合初战练兵。"
+    },
+    {
+      "id":"easy_2","name":"骚扰部队","difficulty":"easy","tier":"iron","enemySetId":"setA","enemyUnitIds":["EA01","EA01","EA01","EA02","EA02"],"rewardPoints":120,"guaranteedDrop":null,"desc":"蛮族步卒掩护猎弓手从两翼袭扰，注意保护脆弱的远程部队。"
+    },
+    {
+      "id":"easy_3","name":"骑兵突袭","difficulty":"easy","tier":"iron","enemySetId":"setA","enemyUnitIds":["EA01","EA01","EA02","EA02","EA03","EA03"],"rewardPoints":150,"guaranteedDrop":"W020","desc":"轻骑斥候从侧翼突击，步兵正面压上、弓兵远程策应，首通可获青铜战戟。"
+    },
+    {
+      "id":"easy_4","name":"蛮族围营","difficulty":"easy","tier":"iron","enemySetId":"setA","enemyUnitIds":["EA01","EA01","EA01","EA02","EA02","EA03"],"rewardPoints":180,"guaranteedDrop":null,"desc":"蛮族倾巢而出围困营地，步弓骑三路并进，需要灵活调度部队。"
+    },
+    {
+      "id":"easy_5","name":"蛮族大军","difficulty":"easy","tier":"iron","enemySetId":"setA","enemyUnitIds":["EA01","EA01","EA01","EA02","EA02","EA03","EA03"],"rewardPoints":250,"guaranteedDrop":null,"desc":"蛮族大军压境，步骑协同推进，形式危急！"
+    },
+    {
+      "id":"easy_6","name":"蛮族首领","difficulty":"easy","tier":"iron","enemySetId":"setA","enemyUnitIds":["EA01","EA01","EA01","EA02","EA02","EA03","EA03"],"rewardPoints":300,"guaranteedDrop":"W019","desc":"蛮族首领集结全部战力大举压境，首通奖励青铜长剑，开启中等难度之路。"
+    },
+    {
+      "id":"medium_1","name":"精灵前哨","difficulty":"medium","tier":"bronze","enemySetId":"setB","enemyUnitIds":["ED01","ED01","ED01","ED01"],"rewardPoints":200,"guaranteedDrop":null,"desc":"精灵长矛护卫镇守森林前哨，阵型严整，绝非蛮族可比。"
+    },
+    {
+      "id":"medium_2","name":"游侠巡逻","difficulty":"medium","tier":"bronze","enemySetId":"setB","enemyUnitIds":["ED01","ED01","ED01","ED02","ED02"],"rewardPoints":250,"guaranteedDrop":null,"desc":"精灵游侠在树冠间穿梭放箭，长矛护卫在地面固守阵线。"
+    },
+    {
+      "id":"medium_3","name":"风骑突袭","difficulty":"medium","tier":"bronze","enemySetId":"setB","enemyUnitIds":["ED01","ED01","ED02","ED02","ED03","ED03"],"rewardPoints":300,"guaranteedDrop":"S006","desc":"精灵风骑兵从密林两侧包抄突击，首通可获精灵纹章盾。"
+    },
+    {
+      "id":"medium_4","name":"剑舞战阵","difficulty":"medium","tier":"bronze","enemySetId":"setB","enemyUnitIds":["ED01","ED01","ED04","ED04","ED02","ED02"],"rewardPoints":350,"guaranteedDrop":null,"desc":"精灵剑舞者加入战阵，双持短剑近身切入，与长矛护卫形成互补。"
+    },
+    {
+      "id":"medium_5","name":"森林围猎","difficulty":"medium","tier":"bronze","enemySetId":"setB","enemyUnitIds":["ED01","ED01","ED04","ED04","ED03","ED03","ED05","ED05"],"rewardPoints":400,"guaranteedDrop":null,"desc":"精灵鹰射手居高临下校准射击，风骑兵在外围游走拦截。"
+    },
+    {
+      "id":"medium_6","name":"精灵圣殿","difficulty":"medium","tier":"bronze","enemySetId":"setB","enemyUnitIds":["ED01","ED01","ED01","ED04","ED04","ED03","ED03","ED05"],"rewardPoints":500,"guaranteedDrop":"W025","desc":"精灵圣殿守卫全军出击，首通奖励精灵战弓，开启困难之路。"
+    },
+    {
+      "id":"hard_1","name":"钢甲前哨","difficulty":"hard","tier":"bronze","enemySetId":"setC","enemyUnitIds":["EB01","EB01","EB01","EB02","EB02"],"rewardPoints":300,"guaranteedDrop":null,"desc":"精锐铁卫步兵与神射手组成正规防线，战力远超精灵哨兵。"
+    },
+    {
+      "id":"hard_2","name":"双线压制","difficulty":"hard","tier":"bronze","enemySetId":"setC","enemyUnitIds":["EB01","EB01","EB02","EB02","EB03","EB03"],"rewardPoints":350,"guaranteedDrop":null,"desc":"铁甲骑士率铁卫步兵正面压阵，神射手在后方远程压制。"
+    },
+    {
+      "id":"hard_3","name":"暗裔先锋","difficulty":"hard","tier":"bronze","enemySetId":"setC","enemyUnitIds":["EB01","EB01","EB02","EB02","EE01","EE01"],"rewardPoints":400,"guaranteedDrop":"A017","desc":"暗裔重装战士作为先锋登场，正面压力骤增，首通可获秘银板甲。"
+    },
+    {
+      "id":"hard_4","name":"精锐会战","difficulty":"hard","tier":"bronze","enemySetId":"setC","enemyUnitIds":["EB01","EB01","EB03","EB03","EE01","EE01","EE02","EE02"],"rewardPoints":450,"guaranteedDrop":null,"desc":"铁甲骑士与暗裔弩手混编，人族精锐与暗裔军团首次联合作战。"
+    },
+    {
+      "id":"hard_5","name":"暗裔入侵","difficulty":"hard","tier":"bronze","enemySetId":"setC","enemyUnitIds":["EE01","EE01","EE02","EE02","EE03","EE03","EE04","EE04"],"rewardPoints":550,"guaranteedDrop":"S007","desc":"暗裔军团大举入侵，死亡骑士统领巨魔横冲直撞，首通可获暗裔铁盾。"
+    },
+    {
+      "id":"hard_6","name":"钢铁长城","difficulty":"hard","tier":"bronze","enemySetId":"setC","enemyUnitIds":["EB01","EB01","EB03","EB03","EE01","EE01","EE03","EE03"],"rewardPoints":650,"guaranteedDrop":"W026","desc":"人族铁卫与暗裔重装齐上阵，钢铁与暗影交织的最终防线，首通奖励暗裔巨刃。"
+    },
+    {
+      "id":"legend_1","name":"皇家卫队","difficulty":"legend","tier":"gold","enemySetId":"setD","enemyUnitIds":["EC01","EC01","EC01","EC03","EC03"],"rewardPoints":500,"guaranteedDrop":null,"desc":"皇家铁卫组成钢铁防线，战狼群从侧翼发起突袭。"
+    },
+    {
+      "id":"legend_2","name":"龙骑降临","difficulty":"legend","tier":"gold","enemySetId":"setD","enemyUnitIds":["EC01","EC01","EC02","EC02","EC03","EC03"],"rewardPoints":650,"guaranteedDrop":null,"desc":"双龙骑士从云端俯冲而下，铁卫与战狼群在地面协同。"
+    },
+    {
+      "id":"legend_3","name":"暗裔天罚","difficulty":"legend","tier":"gold","enemySetId":"setD","enemyUnitIds":["EC01","EC01","EC02","EC02","EE03","EE03","EE05","EE05"],"rewardPoints":750,"guaranteedDrop":"W021","desc":"暗裔怨灵随死亡骑士降临战场，首通可获秘银长剑。"
+    },
+    {
+      "id":"legend_4","name":"终焉联军","difficulty":"legend","tier":"gold","enemySetId":"setD","enemyUnitIds":["EC01","EC01","EC03","EC03","EE03","EE03","EE05","EE05"],"rewardPoints":850,"guaranteedDrop":null,"desc":"皇家与暗裔组成终焉联军，天灾与铁壁同时碾压而来。"
+    },
+    {
+      "id":"legend_5","name":"暗影王座","difficulty":"legend","tier":"gold","enemySetId":"setD","enemyUnitIds":["EC01","EC01","EC02","EC02","EE03","EE03","EE05","EE05"],"rewardPoints":1050,"guaranteedDrop":null,"desc":"暗影王座前的最终守卫，龙骑与死骑交错突击。"
+    },
+    {
+      "id":"legend_6","name":"万界霸主","difficulty":"legend","tier":"gold","enemySetId":"setD","enemyUnitIds":["EC01","EC01","EC01","EC02","EC02","EE03","EE03","EE05"],"rewardPoints":1200,"guaranteedDrop":"W027","desc":"万界霸主的终极军势！三铁卫双龙骑双死骑一怨灵倾巢而出，首通奖励暗裔重弩。"
+    }
+  ]
+}

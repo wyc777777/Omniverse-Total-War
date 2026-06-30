@@ -1,0 +1,51 @@
+{
+  "_desc": "每种难度的敌方编组 + AI行为参数",
+  "_note": "AI 提示：本文件与 js/fallback-data.js 的 DC.levels 关联，如若修改，必须同时修改 fallback 文件保持一致",
+  "levels": {
+    "easy": {
+      "label": "低",
+      "desc": "乌合之众，训练你的兵",
+      "enemy": ["peasant_infantry","peasant_infantry","peasant_archer","peasant_archer","peasant_archer","peasant_infantry"],
+      "ai": {
+        "targeting": "random",
+        "moveStyle": "random",
+        "maxMoveSteps": 1,
+        "aggression": 0.3
+      }
+    },
+    "medium": {
+      "label": "中",
+      "desc": "混编民兵，稍有威胁",
+      "enemy": ["peasant_infantry","peasant_infantry","infantry","peasant_archer","peasant_archer","archer"],
+      "ai": {
+        "targeting": "nearest",
+        "moveStyle": "toward",
+        "maxMoveSteps": 1,
+        "aggression": 0.5
+      }
+    },
+    "hard": {
+      "label": "高",
+      "desc": "正规军出击，考验战术",
+      "enemy": ["infantry","infantry","cavalry","cavalry","archer","flying"],
+      "ai": {
+        "targeting": "weakest",
+        "moveStyle": "advance",
+        "maxMoveSteps": 2,
+        "aggression": 0.8
+      }
+    },
+    "extreme": {
+      "label": "极难",
+      "desc": "精锐四面围城，寸步难行",
+      "enemy": ["infantry","infantry","cavalry","cavalry","cavalry","archer","archer","archer","flying","flying"],
+      "ai": {
+        "targeting": "focus_fire",
+        "moveStyle": "hunt",
+        "maxMoveSteps": 3,
+        "aggression": 1.0
+      }
+    }
+  },
+  "defaultEnemy": ["infantry","infantry","infantry","cavalry","cavalry","cavalry","archer","archer","flying","flying"]
+}

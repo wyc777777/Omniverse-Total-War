@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>万界全面战争 · 新手指南</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box }
+
+  :root {
+    --gold: #d4a017;
+    --gold-light: #f0d060;
+    --gold-dark: #8b6914;
+    --parchment: #f5ecd7;
+    --parchment-dark: #e8dcc0;
+    --ink: #1a0f05;
+    --ink-light: #3d2b15;
+    --crimson: #8b2500;
+    --crimson-light: #b8401a;
+    --charcoal: #1c1410;
+    --steel: #4a5568;
+    --ice: #e2e8f0;
+  }
+
+  html { scroll-behavior: smooth; background: var(--charcoal) }
+
+  body {
+    font-family: 'Noto Sans SC', system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--charcoal);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(212,160,23,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse at 80% 80%, rgba(139,37,0,0.06) 0%, transparent 50%),
+      linear-gradient(180deg, #1c1410 0%, #0f0b08 100%);
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(212,160,23,0.03) 2px, rgba(212,160,23,0.03) 4px),
+      repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(212,160,23,0.03) 2px, rgba(212,160,23,0.03) 4px);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 200px;
+    background: linear-gradient(0deg, var(--charcoal) 0%, transparent 100%);
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 5% 10%;
+    opacity: 0.06;
+    background-image:
+      linear-gradient(rgba(212,160,23,0.5) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(212,160,23,0.5) 1px, transparent 1px);
+    background-size: 80px 80px;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 70%);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 40px 24px;
+    max-width: 800px;
+  }
+
+  .hero-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .hero-brand img {
+    width: 48px; height: 48px;
+    filter: drop-shadow(0 2px 8px rgba(212,160,23,0.4));
+  }
+
+  .hero-brand span {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    letter-spacing: 6px;
+    color: var(--gold);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .hero h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(42px, 7vw, 76px);
+    font-weight: 900;
+    color: var(--gold-light);
+    letter-spacing: 8px;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    text-shadow: 0 0 80px rgba(212,160,23,0.3), 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .hero h2 {
+    font-size: clamp(18px, 3vw, 26px);
+    font-weight: 400;
+    color: #a09070;
+    letter-spacing: 12px;
+    margin-bottom: 36px;
+    font-family: 'Noto Serif SC', serif;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 44px;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 24px rgba(212,160,23,0.25);
+  }
+
+  .hero-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 36px rgba(212,160,23,0.4);
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+  }
+
+  .hero-scroll span {
+    display: block;
+    width: 28px; height: 48px;
+    border: 2px solid rgba(212,160,23,0.4);
+    border-radius: 14px;
+    position: relative;
+  }
+
+  .hero-scroll span::after {
+    content: '';
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 4px; height: 10px;
+    background: var(--gold);
+    border-radius: 2px;
+    animation: scrollDot 2s ease infinite;
+  }
+
+  @keyframes scrollDot {
+    0%, 100% { top: 8px; opacity: 1 }
+    50% { top: 24px; opacity: 0.3 }
+  }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    position: relative;
+    padding: 100px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    letter-spacing: 8px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .section h3 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    color: var(--parchment);
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+    line-height: 1.3;
+  }
+
+  .section p.lead {
+    font-size: 17px;
+    color: #a09070;
+    max-width: 640px;
+    margin-bottom: 48px;
+  }
+
+  /* ===== DIVIDER ===== */
+  .divider {
+    width: 60px; height: 3px;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+    margin: 0 0 48px 0;
+    border-radius: 2px;
+  }
+
+  /* ===== STAT TABLE ===== */
+  .stat-table-wrap {
+    overflow-x: auto;
+    margin-bottom: 56px;
+    border: 1px solid rgba(212,160,23,0.15);
+    border-radius: 8px;
+    background: rgba(30,20,10,0.5);
+  }
+
+  .stat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .stat-table thead th {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    padding: 18px 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(212,160,23,0.2);
+    background: rgba(20,12,6,0.6);
+    white-space: nowrap;
+  }
+
+  .stat-table tbody td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(212,160,23,0.08);
+    color: #c0b090;
+  }
+
+  .stat-table tbody tr:hover {
+    background: rgba(212,160,23,0.04);
+  }
+
+  .stat-table .stat-name {
+    color: var(--parchment);
+    font-weight: 600;
+    white-space: nowrap;
+    font-family: 'Noto Serif SC', serif;
+  }
+
+  .stat-table .stat-desc {
+    color: #8a7a60;
+    font-size: 13px;
+  }
+
+  /* ===== FEATURE GRID ===== */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 28px;
+    margin-bottom: 56px;
+  }
+
+  .feature-item {
+    padding: 36px 32px;
+    background: linear-gradient(180deg, rgba(245,236,215,0.04), rgba(245,236,215,0.01));
+    border: 1px solid rgba(212,160,23,0.1);
+    border-radius: 6px;
+    transition: border-color 0.3s ease;
+  }
+
+  .feature-item:hover {
+    border-color: rgba(212,160,23,0.3);
+  }
+
+  .feature-icon {
+    font-size: 36px;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  .feature-item h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    color: var(--parchment);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+
+  .feature-item p {
+    font-size: 14px;
+    color: #8a7a60;
+    line-height: 1.8;
+  }
+
+  /* ===== FLOW STEPS ===== */
+  .flow-steps {
+    counter-reset: step;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    margin-bottom: 56px;
+  }
+
+  .flow-step {
+    position: relative;
+    padding: 40px 28px;
+    background: rgba(30,18,10,0.5);
+    border: 1px solid rgba(212,160,23,0.12);
+    border-radius: 6px;
+    counter-increment: step;
+  }
+
+  .flow-step::before {
+    content: '0' counter(step);
+    position: absolute;
+    top: -16px; left: 24px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: rgba(212,160,23,0.12);
+    letter-spacing: 2px;
+  }
+
+  .flow-step h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    color: var(--parchment);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .flow-step p {
+    font-size: 13px;
+    color: #8a7a60;
+    line-height: 1.7;
+  }
+
+  /* ===== TIP BOX ===== */
+  .tip-box {
+    padding: 28px 32px;
+    border-left: 4px solid var(--gold);
+    background: rgba(212,160,23,0.05);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 32px;
+  }
+
+  .tip-box h5 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    color: var(--gold-light);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .tip-box p {
+    font-size: 14px;
+    color: #a09070;
+    line-height: 1.7;
+  }
+
+  .tip-box.danger {
+    border-left-color: var(--crimson);
+    background: rgba(139,37,0,0.06);
+  }
+
+  .tip-box.danger h5 { color: var(--crimson-light) }
+
+  /* ===== TIER TAGS ===== */
+  .tier-tag {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .tier-iron { background: rgba(74,74,74,0.3); color: #999 }
+  .tier-bronze { background: rgba(205,127,50,0.2); color: #cd7f32 }
+  .tier-gold { background: rgba(255,215,0,0.15); color: #ffd700 }
+  .tier-diamond { background: rgba(167,139,250,0.15); color: #a78bfa }
+
+  /* ===== ADVANCED SECTION ===== */
+  .advanced-section {
+    background: linear-gradient(180deg, #1a1210 0%, #1c1410 100%);
+    padding: 100px 0;
+  }
+
+  .advanced-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 32px;
+    margin-bottom: 56px;
+  }
+
+  .advanced-card {
+    position: relative;
+    padding: 32px;
+    background: linear-gradient(135deg, rgba(139,37,0,0.06), rgba(212,160,23,0.04));
+    border: 1px solid rgba(212,160,23,0.1);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .advanced-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--crimson), transparent);
+    opacity: 0.5;
+  }
+
+  .advanced-card h4 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    color: var(--parchment);
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+  }
+
+  .advanced-card p, .advanced-card li {
+    font-size: 14px;
+    color: #9a8a70;
+    line-height: 1.9;
+  }
+
+  .advanced-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .advanced-card ul li::before {
+    content: '▸ ';
+    color: var(--crimson-light);
+    font-weight: bold;
+  }
+
+  /* ===== PRICING CARDS ===== */
+  .price-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 56px;
+  }
+
+  .price-card {
+    padding: 28px 24px;
+    background: rgba(30,18,10,0.5);
+    border: 1px solid rgba(212,160,23,0.08);
+    border-radius: 6px;
+    text-align: center;
+  }
+
+  .price-card .tier-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+
+  .price-card h5 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 16px;
+    color: var(--parchment);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .price-card .cost {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .price-card p {
+    font-size: 13px;
+    color: #8a7a60;
+    line-height: 1.6;
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    padding: 80px 24px;
+    text-align: center;
+    background: linear-gradient(180deg, var(--charcoal), #0d0a07);
+    border-top: 1px solid rgba(212,160,23,0.1);
+  }
+
+  .footer-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .footer-brand img {
+    width: 64px; height: 64px;
+    filter: drop-shadow(0 2px 12px rgba(212,160,23,0.5));
+  }
+
+  .footer-brand span {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px;
+    letter-spacing: 6px;
+    color: var(--gold);
+  }
+
+  .afdian-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 36px;
+    background: linear-gradient(135deg, #e85d75, #c0392b);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    margin-bottom: 32px;
+  }
+
+  .afdian-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(232,93,117,0.4);
+  }
+
+  .footer-note {
+    font-size: 12px;
+    color: #5a4a3a;
+    letter-spacing: 4px;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .section { padding: 60px 20px }
+    .hero h1 { letter-spacing: 4px }
+    .hero h2 { letter-spacing: 6px }
+    .feature-grid { grid-template-columns: 1fr }
+    .flow-steps { grid-template-columns: 1fr }
+    .advanced-grid { grid-template-columns: 1fr }
+    .price-grid { grid-template-columns: 1fr 1fr }
+    .stat-table-wrap { font-size: 12px }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="top">
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-brand">
+      <img src="assets/icons/kewukewu.png" alt="kewukewu" onerror="this.style.display='none'">
+      <span>KEWUKEWU 出品</span>
+    </div>
+    <h1>万界全面战争</h1>
+    <h2>新 手 指 南</h2>
+    <a href="#guide" class="hero-cta">开 始 阅 读</a>
+  </div>
+  <div class="hero-scroll">
+    <span></span>
+  </div>
+</section>
+
+<!-- ===== 棋盘与兵种 ===== -->
+<section class="section">
+  <div class="section-label">序章 · 棋盘与兵种</div>
+  <h3>六角棋盘</h3>
+  <p class="lead">每场战斗在六角格棋盘上进行。棋盘分为上下两半，蓝方（玩家）部署在下半区，红方（AI）部署在上半区，中间以河流/分界线隔开。</p>
+  <div class="divider"></div>
+
+  <div class="stat-table-wrap">
+    <table class="stat-table">
+      <thead>
+        <tr><th>概念</th><th>说明</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="stat-name">🗺 棋盘</td>
+          <td class="stat-desc">12×8 六角格棋盘。六角格使用立方体坐标 (q,r,s)，近战只能攻击相邻格，远程根据武器射程攻击。</td>
+        </tr>
+        <tr>
+          <td class="stat-name">🚩 部署</td>
+          <td class="stat-desc">选兵后进入布阵阶段，拖拽己方部队到己方半场任意位置。确认后进入自动布阵（AI 同时部署）。</td>
+        </tr>
+        <tr>
+          <td class="stat-name">🎯 攻击范围</td>
+          <td class="stat-desc">近战武器攻击范围为 1 格（相邻）；弓弩远程武器范围为 2-4 格，可越过中间单位射击。</td>
+        </tr>
+        <tr>
+          <td class="stat-name">🏃 移动</td>
+          <td class="stat-desc">兵团每回合按移动力值移动对应格数。移动后若相邻敌军，可发动攻击。</td>
+        </tr>
+        <tr>
+          <td class="stat-name">🔄 回合</td>
+          <td class="stat-desc">玩家先行动→AI 行动→回合结束。每个兵团每回合可选择移动+攻击 或 原地攻击。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:60px">兵团类型</h3>
+  <p class="lead">游戏中共有五种基础兵团类型，每种有其独特的战场定位。</p>
+  <div class="divider"></div>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <span class="feature-icon">⚔️</span>
+      <h4>步兵（Infantry）</h4>
+      <p>基础近战单位。人数最多，可持盾，适合正面战线。可装备剑/斧/长柄等近战武器。克制关系：正面抵抗骑兵冲锋（长柄武器附带"抵御冲锋"）。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🐴</span>
+      <h4>骑兵（Cavalry）</h4>
+      <p>高机动近战单位。人数较少但移动力高，适合侧翼包抄与绕后。冲锋时对步兵造成额外士气打击。注意：<strong>骑射手</strong>是特殊变种——可装弓/弩远程输出，但只能通过召唤获得。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🏹</span>
+      <h4>远程兵（Archer）</h4>
+      <p>远程输出单位。可在安全距离外持续射击。弓类惧怕近身（相邻格有敌军时无法射击），弩类无视近战干扰。面对高护甲目标时可用重甲克制武器。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🦅</span>
+      <h4>空军（Flying）</h4>
+      <p>空中单位。可跨越地形障碍，无视地面阻挡。攻击地面步兵时触发"空中震慑"——额外扣除步兵士气。分为<strong>近战空军</strong>（剑/斧）和<strong>远程空军</strong>（弓/弩，需通过召唤获得"骑射"武器）。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🐻</span>
+      <h4>野兽（Beast）</h4>
+      <p>动物单位。只能装备护甲，无法使用武器、盾牌或坐骑。天生拥有强大的基础攻击力与血量，但士气较低，容易溃逃。野兽有额外体型规模限制。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 初级内容 ===== -->
+<div id="guide">
+
+<section class="section">
+  <div class="section-label">第一章 · 基础</div>
+  <h3>认识你的兵团</h3>
+  <p class="lead">每个兵团由种族、武器、盾牌、护甲、坐骑五要素构成，最终合成为战场上的实际属性。</p>
+  <div class="divider"></div>
+
+  <div class="stat-table-wrap">
+    <table class="stat-table">
+      <thead>
+        <tr><th>属性</th><th>含义</th><th>来源</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="stat-name">🛡 总兵力</td>
+          <td class="stat-desc">兵团的整体血量池 = 单兵HP × 士兵数。被打到 0 即溃逃。</td>
+          <td class="stat-desc">种族基础HP + 坐骑加成；受机动惩罚影响</td>
+        </tr>
+        <tr>
+          <td class="stat-name">⚔ 杀伤</td>
+          <td class="stat-desc">每次攻击的基础伤害值，扣除对方护甲后造成实际伤害。</td>
+          <td class="stat-desc">武器基础伤害，或种族天生武器（空手近战）</td>
+        </tr>
+        <tr>
+          <td class="stat-name">🔨 破甲</td>
+          <td class="stat-desc">最低保底伤害——即使护甲高于杀伤，也能打出破甲值。</td>
+          <td class="stat-desc">武器破甲属性，空手为 0</td>
+        </tr>
+        <tr>
+          <td class="stat-name">🛡 护甲</td>
+          <td class="stat-desc">从敌方杀伤中直接减免的伤害量（先减后算保底）。</td>
+          <td class="stat-desc">种族天生护甲 + 护甲装备 + 坐骑护甲 + 盾牌附魔</td>
+        </tr>
+        <tr>
+          <td class="stat-name">🎯 攻击距离</td>
+          <td class="stat-desc">射程——能打到几格外。1 为近战，2-4 为远程。</td>
+          <td class="stat-desc">武器 allowedRange；弓惧怕近身，弩无视近战干扰</td>
+        </tr>
+        <tr>
+          <td class="stat-name">👥 攻击范围</td>
+          <td class="stat-desc">单次攻击同时打击多少敌方士兵（与军团规模挂钩）。</td>
+          <td class="stat-desc">max(军团规模-1, 武器attackRange)；大型单位打击面更大</td>
+        </tr>
+        <tr>
+          <td class="stat-name">🏃 移动</td>
+          <td class="stat-desc">每回合可移动的六角格数量。重甲会惩罚移动力。</td>
+          <td class="stat-desc">max(种族移动, 坐骑移动) + 护甲机动惩罚；骑兵/空军保底 2 格</td>
+        </tr>
+        <tr>
+          <td class="stat-name">💪 士气</td>
+          <td class="stat-desc">战斗意志。降到 0 则溃逃。受背袭/侧袭/战损/连锁溃逃影响。</td>
+          <td class="stat-desc">种族基础士气；未行动的回合结束 +3；脱离包围 +5</td>
+        </tr>
+        <tr>
+          <td class="stat-name">🏹 远程免伤</td>
+          <td class="stat-desc">减免远程攻击的百分比。盾牌提供此效果。</td>
+          <td class="stat-desc">盾牌效果（如"远程免伤+25%"）；双手武器无法持盾</td>
+        </tr>
+        <tr>
+          <td class="stat-name">📏 军团规模</td>
+          <td class="stat-desc">兵团在棋盘上占据的空间 = 单位规模 × 人数。上限 160。</td>
+          <td class="stat-desc">种族 scale + 坐骑 scale；超过 160 则自动压缩人数</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===== 积分物价 ===== -->
+<section class="section">
+  <div class="section-label">第二章 · 经济</div>
+  <h3>积分与物价</h3>
+  <p class="lead">积分是万界的通用货币——召唤、购买部队和装备都需要它。通过战斗胜利获取。</p>
+  <div class="divider"></div>
+
+  <div class="price-grid">
+    <div class="price-card">
+      <div class="tier-icon">⚫</div>
+      <h5>黑铁召唤</h5>
+      <div class="cost" style="color:#999">200</div>
+      <p>召唤一支黑铁级部队<br>威力 5-20</p>
+    </div>
+    <div class="price-card">
+      <div class="tier-icon">🟤</div>
+      <h5>青铜召唤</h5>
+      <div class="cost" style="color:#cd7f32">600</div>
+      <p>召唤一支青铜级部队<br>威力 20-45</p>
+    </div>
+    <div class="price-card">
+      <div class="tier-icon">🟡</div>
+      <h5>黄金召唤</h5>
+      <div class="cost" style="color:#ffd700">1200</div>
+      <p>召唤一支黄金级部队<br>威力 45-80</p>
+    </div>
+    <div class="price-card">
+      <div class="tier-icon">💎</div>
+      <h5>钻石召唤</h5>
+      <div class="cost" style="color:#a78bfa">2500</div>
+      <p>召唤一支钻石级部队<br>威力 80-130</p>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <h5>💡 装备价格参考</h5>
+    <p>武器：铁 80 / 青铜 400 / 黄金 1000 / 钻石 2000 &nbsp;|&nbsp;
+    盾牌：铁 50 / 青铜 120 / 黄金 300 / 钻石 600 &nbsp;|&nbsp;
+    护甲：铁 100 / 青铜 200 / 黄金 600 / 钻石 1200 &nbsp;|&nbsp;
+    坐骑：铁 70 / 青铜 180 / 黄金 600 / 钻石 1400<br>
+    ⚠ 出售兵团的折旧率为 50%；出售背包装备折旧率见品阶。</p>
+  </div>
+</section>
+
+<!-- ===== 召唤之门 ===== -->
+<section class="section">
+  <div class="section-label">第三章 · 召唤</div>
+  <h3>召唤之门</h3>
+  <p class="lead">召唤是获取独特部队的核心途径——AI 会根据你选择的世界设定和品阶，为你量身打造一支独一无二的兵团。</p>
+  <div class="divider"></div>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <span class="feature-icon">🌍</span>
+      <h4>八大世界设定</h4>
+      <p>战锤、DND、奇迹时代、魔兽、指环王、暗黑哥特、中世纪欧洲、中国古代——每个世界有独特的种族池和野兽池。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">✨</span>
+      <h4>AI 深度生成</h4>
+      <p>AI 会生成：部队名称、背景故事、信仰、武器名字/伤害/破甲/特效、护甲名字/防御、盾牌、坐骑——全部独一无二。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">📊</span>
+      <h4>威力校准</h4>
+      <p>系统自动计算召唤结果的威力指数（进攻分 + 生存分），若超出品阶范围则自动调整属性，确保平衡。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">💬</span>
+      <h4>自定义描述</h4>
+      <p>你可以在召唤时输入自定义描述（如"我想要一支擅长冲锋的重骑兵"），AI 会据此生成更符合你期望的部队。</p>
+    </div>
+  </div>
+
+  <div class="tip-box">
+    <h5>🔧 API 配置</h5>
+    <p>游戏默认使用 DeepSeek API（deepseek-v4-flash）。你可以在设置中配置自己的 API Key，支持多配置文件切换。<br>
+    API 端点：<code>POST /api/summon</code> —— 30 秒超时；<code>POST /api/ai-battle-generate</code> —— 45 秒超时。</p>
+  </div>
+</section>
+
+<!-- ===== 对战流程 ===== -->
+<section class="section">
+  <div class="section-label">第四章 · 对战</div>
+  <h3>对战基本操作与流程</h3>
+  <p class="lead">从选兵到胜利，一场完整的对战分为四个阶段。理解流程是制胜的第一步。</p>
+  <div class="divider"></div>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <h4>掷骰争先后</h4>
+      <p>双方各掷 1d6。点数高者先手，平局随机决定。先手在部署和战斗中均优先行动。</p>
+    </div>
+    <div class="flow-step">
+      <h4>交替部署</h4>
+      <p>双方轮流将部队从预备栏放置到棋盘己方半场。点击预备栏部队 → 点击空六角格即可放置。双击已放置部队可回收。</p>
+    </div>
+    <div class="flow-step">
+      <h4>战斗回合</h4>
+      <p>选中己方部队 → 点击绿色高亮格移动 → 点击红色高亮敌方格攻击。每回合每支部队可移动一次并攻击一次。完成后点"结束回合"。</p>
+    </div>
+    <div class="flow-step">
+      <h4>结算奖励</h4>
+      <p>全歼敌方或敌方全溃 = 胜利。获得积分 + 敌方装备掉落（首通必掉保底装备）。积分可用于购买新部队或召唤。</p>
+    </div>
+  </div>
+
+  <div class="tip-box danger">
+    <h5>⚠ 关键规则</h5>
+    <p>· 弓兵被近战贴脸时无法射击（惧怕近身），弩兵无视此限制<br>
+    · 移动时可能触发敌方偷袭（概率 10%-40%，取决于偷袭者品阶）<br>
+    · 空军永远不会被偷袭，但士气归零仍会溃逃<br>
+    · 敌方回合时你无法操作，请等待 AI 行动完毕</p>
+  </div>
+</section>
+
+<!-- ===== 界面介绍 ===== -->
+<section class="section">
+  <div class="section-label">第五章 · 界面</div>
+  <h3>板块与界面介绍</h3>
+  <p class="lead">游戏主界面共有六大功能板块，从备战页一键触达。</p>
+  <div class="divider"></div>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <span class="feature-icon">🏕️</span>
+      <h4>兵营</h4>
+      <p>展开查看每支部队的详细属性与装备槽位。点击装备槽可更换/卸下装备。部队按品阶分类展示。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">📦</span>
+      <h4>背包</h4>
+      <p>查看和管理你拥有的装备（武器/盾牌/护甲/坐骑）。可在此出售不需要的装备换取积分。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🗺️</span>
+      <h4>开始对战（关卡模式）</h4>
+      <p>四个难度 × 六个关卡 = 24 个预设战役。首通有保底装备掉落。选择难度和关卡后进入布阵。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🤖</span>
+      <h4>AI 对战</h4>
+      <p>与 AI 生成的对手交战。消耗部队但可获得积分和装备掉落奖励。无限重复挑战。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🛒</span>
+      <h4>商城</h4>
+      <p>购买新部队或装备。分为"兵种"和"装备"两个标签页。已购买的装备进入背包，需手动装备到部队上。召唤过的兵团和装备也会在商城中解锁（价格更贵）。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🌌</span>
+      <h4>召唤之门</h4>
+      <p>AI 生成独特部队。你可以自定义世界观设定（战锤、DND、魔兽、指环王等八个世界），选择品阶和输入描述，让 AI 为你量身打造独一无二的兵团。召唤的种族和装备均独立生成并可在商城再次购买。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== API 使用 ===== -->
+<section class="section">
+  <div class="section-label">第六章 · API</div>
+  <h3>API 接口使用</h3>
+  <p class="lead">游戏运行在本地服务器（默认端口 3456），所有数据通过 REST API 管理。</p>
+  <div class="divider"></div>
+
+  <div class="stat-table-wrap">
+    <table class="stat-table">
+      <thead>
+        <tr><th>方法</th><th>路径</th><th>用途</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="stat-name">POST</td><td>/api/summon</td><td class="stat-desc">AI 生成部队 —— 发送品阶、种族、世界设定、自定义描述，返回完整部队定义</td></tr>
+        <tr><td class="stat-name">POST</td><td>/api/ai-battle-generate</td><td class="stat-desc">AI 生成对手 —— 返回敌方部队列表、装备、种族等完整配置</td></tr>
+        <tr><td class="stat-name">GET</td><td>/api/saves</td><td class="stat-desc">获取所有存档列表</td></tr>
+        <tr><td class="stat-name">PUT</td><td>/api/saves/:name</td><td class="stat-desc">保存/更新存档（JSON body）</td></tr>
+        <tr><td class="stat-name">GET</td><td>/api/summoned/:name</td><td class="stat-desc">获取某存档的召唤数据（单独存储以减少主存档体积）</td></tr>
+        <tr><td class="stat-name">GET/PUT</td><td>/api/api-config</td><td class="stat-desc">管理 AI API 密钥和多配置文件</td></tr>
+        <tr><td class="stat-name">GET/PUT</td><td>/api/settings</td><td class="stat-desc">用户设置（壁纸偏好等）</td></tr>
+        <tr><td class="stat-name">GET/POST/DELETE</td><td>/api/wallpapers</td><td class="stat-desc">管理自定义壁纸</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tip-box">
+    <h5>🔑 配置 API Key</h5>
+    <p>在游戏主菜单的设置页面输入你的 DeepSeek API Key，或者替换为其他兼容 OpenAI 格式的 API 端点。<br>
+    配置文件存储在 <code>assets/api_config.json</code>，支持多个 API 配置文件之间切换。</p>
+  </div>
+</section>
+
+</div>
+
+<!-- ===== 高级内容 ===== -->
+<div class="advanced-section">
+<section class="section">
+  <div class="section-label">进阶 · 战术</div>
+  <h3>走位、士气与战斗艺术</h3>
+  <p class="lead">掌握了基础之后，这些进阶技巧将让你在战场上所向披靡。</p>
+  <div class="divider"></div>
+
+  <div class="advanced-grid">
+    <div class="advanced-card">
+      <h4>🎯 走位——攻击角度的力量</h4>
+      <ul>
+        <li>正面攻击：无加成，标准伤害</li>
+        <li>侧袭（侧面）：护甲 -10%，士气 -5，骑兵伤害 ×1.2</li>
+        <li>背袭（后方）：护甲 -20%，士气 -10，骑兵伤害 ×1.4</li>
+        <li>棋子面朝方向由最后一次移动或攻击决定</li>
+        <li>骑兵冲锋的动能加成取决于实际移动距离（2-4 格 → 1.5-2.0×）</li>
+      </ul>
+    </div>
+
+    <div class="advanced-card">
+      <h4>💔 打击士气——不战而屈人之兵</h4>
+      <ul>
+        <li>包围：3+ 敌方邻接 → 每回合 -5 士气</li>
+        <li>侧袭 -5 士气，背袭 -10 士气</li>
+        <li>友军溃逃：2 格内每支溃逃友军 -3 士气（连锁效应）</li>
+        <li>血量 < 75%/50%/25% → 士气 -10/-15/-25</li>
+        <li>空军攻击步兵额外 -5 士气（空中震慑）</li>
+        <li>击杀敌方：5 格内友军获得 +5 士气</li>
+      </ul>
+    </div>
+
+    <div class="advanced-card">
+      <h4>⚙️ 换装备操作</h4>
+      <ul>
+        <li>在兵营展开部队详情 → 点击装备槽 → 选择背包装备即可换装</li>
+        <li>装备先在商城购买进入背包，再到兵营装备到部队</li>
+        <li>双手武器会自动卸下盾牌；野兽单位只能穿护甲</li>
+        <li>装备兼容性由兵种类型和体型决定（如"仅步兵"、"中型以上"）</li>
+        <li>迅捷特性：武器效果，血量 -20% 但移动力 +1（无视上限）</li>
+      </ul>
+    </div>
+
+    <div class="advanced-card">
+      <h4>🛡 战斗注意事项</h4>
+      <ul>
+        <li>高护甲 vs 高破甲：破甲值是保底伤害，护甲再高也能打出破甲值</li>
+        <li>弩兵克制重甲（护甲 ≥ 30 时伤害 ×1.2）且无视近战干扰</li>
+        <li>长柄武器附带"抵御冲锋"——正面接骑兵时反骑额外伤害 ×1.5</li>
+        <li>军团规模上限 160：超限部队会被压缩人数，同等兵力下更抗打</li>
+        <li>布阵时近战在前、远程在后，AI 在困难和传说难度也会这样布阵</li>
+      </ul>
+    </div>
+
+    <div class="advanced-card">
+      <h4>⚡ 偷袭机制</h4>
+      <ul>
+        <li>任何部队移动时，周围 1 格的敌方近战单位可能发动偷袭</li>
+        <li>触发概率：黑铁 10% / 青铜 20% / 黄金 30% / 钻石 40%</li>
+        <li>偷袭伤害 = 兵团 50% 人数 × 武器伤害 × 方位倍率（侧袭 1.15×，背袭 1.30×）× 60%</li>
+        <li>偷袭附带 -5 士气打击，可能直接导致溃逃</li>
+        <li>空军永远不会被偷袭；骑兵冲锋后也不会</li>
+      </ul>
+    </div>
+
+    <div class="advanced-card">
+      <h4>🌌 召唤兵团的经济系统</h4>
+      <ul>
+        <li>召唤的兵团由<strong>召唤种族基底</strong>（属性/体型/天生护甲）与<strong>召唤装备</strong>（武器/护甲/盾牌/坐骑）两部分构成</li>
+        <li>召唤过的兵团类型会在商城自动解锁，可以再次购买（价格比商城预设兵种更贵）</li>
+        <li>召唤过的装备同样会在商城装备标签页解锁，供其他部队购买使用</li>
+        <li>每个部队的装备槽位对应：武器（单手/双手/远程）、盾牌（仅单手武器可用）、护甲、坐骑</li>
+        <li>卸下装备会放入背包，再从背包可装备到任意兼容的部队上</li>
+      </ul>
+    </div>
+
+    <div class="advanced-card">
+      <h4>🔮 其他隐藏机制</h4>
+      <ul>
+        <li>部队即使士气不归零，血量归零也会溃逃</li>
+        <li>未行动的部队在回合结束时 +3 士气</li>
+        <li>非战斗减员：军团规模越大，每点移动力额外消耗 3% 血量</li>
+        <li>迅捷武器：+1 移动力但 -20% 血量</li>
+        <li>独特装备（_unique:true）无法在商城购买，只能通过特定关卡首通获得</li>
+        <li>AI 在困难难度会集火最弱的玩家部队，优先切后排远程</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ===== 难度 ===== -->
+<section class="section">
+  <div class="section-label">难度参考</div>
+  <h3>四个难度等级</h3>
+  <p class="lead">AI 的行为和敌军配置在四个难度下截然不同。</p>
+  <div class="divider"></div>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <span class="feature-icon">🟢</span>
+      <h4>简单</h4>
+      <p>敌方多为农民兵。AI 直线冲向最近目标，无特殊走位，部署随机。<br>适合熟悉基础操作。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🔵</span>
+      <h4>中等</h4>
+      <p>敌方混编农民与正规兵。AI 主动进攻，弓兵拉扯走位。<br>需要一定的兵种克制意识。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🟠</span>
+      <h4>困难</h4>
+      <p>敌方全正规兵种，AI 精准集火最低血量单位。远程部署在最后排，骑兵绕后。<br>需要精通走位与士气打击。</p>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🔴</span>
+      <h4>极限</h4>
+      <p>敌方精锐大军压境（10 支部队 vs 你的 6 支）。AI 穷追不舍不复退。通关 legend_6（万界霸主）可获得独特钻石武器「万界终结者」——基础杀伤 60、破甲 35、射程 4、附带迅捷。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-brand">
+    <img src="assets/icons/kewukewu.png" alt="KEWUKEWU" onerror="this.style.display='none'">
+    <span>KEWUKEWU</span>
+  </div>
+  <a href="https://ifdian.net/a/kewuyusiyingjiang" target="_blank" rel="noopener" class="afdian-btn">❤️ 支持作者 · 爱发电</a>
+  <p style="color:#6a5a4a;font-size:15px;margin-bottom:12px">万界全面战争 —— AI 驱动的六角战棋策略游戏</p>
+  <p class="footer-note">© 2026 KEWUKEWU · 万界全面战争</p>
+</footer>
+
+<script>
+(function() {
+  // 平滑滚动
+  document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+    a.addEventListener('click', function(e) {
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // 滚动入场动画
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.feature-item, .advanced-card, .flow-step, .price-card, .tip-box').forEach(function(el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(24px)';
+    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(el);
+  });
+
+  // 表格行入场
+  document.querySelectorAll('.stat-table tbody tr').forEach(function(tr, i) {
+    tr.style.opacity = '0';
+    tr.style.transform = 'translateX(-12px)';
+    tr.style.transition = 'opacity 0.4s ease ' + (i * 0.05) + 's, transform 0.4s ease ' + (i * 0.05) + 's';
+    observer.observe(tr);
+  });
+})();
+</script>
+
+</body>
+</html>
