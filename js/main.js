@@ -117,6 +117,24 @@ function initPagePanels() {
   });
 }
 
+// ====== 应用页面壁纸（过渡前调用，确保过渡期间壁纸稳定） ======
+function applyPageWallpaper(name) {
+  if (name === 'Prep' && window.GameSettings) {
+    GameSettings.applyWallpaperAuto();
+  } else if (name === 'Menu' || name === 'Battle') {
+    document.body.classList.remove('body-wallpaper');
+    var wpLayer = document.getElementById('wallpaper-layer');
+    if (wpLayer) {
+      wpLayer.style.backgroundImage = '';
+      wpLayer.style.backgroundSize = '';
+      wpLayer.style.backgroundPosition = '';
+      wpLayer.style.backgroundRepeat = '';
+    }
+    var prepPage = document.getElementById('pagePrep');
+    if (prepPage) prepPage.classList.remove('has-wallpaper');
+  }
+}
+
 // ====== 更新页面状态（动画结束后） ======
 function updatePageState(name) {
   currentPage = name;
@@ -150,21 +168,6 @@ function updatePageState(name) {
     ParticleBG.start();
   } else if (window.ParticleBG) {
     ParticleBG.stop();
-  }
-
-  if (name === 'Prep' && window.GameSettings) {
-    GameSettings.applyWallpaperAuto();
-  } else if (name === 'Menu' || name === 'Battle') {
-    document.body.classList.remove('body-wallpaper');
-    var wpLayer = document.getElementById('wallpaper-layer');
-    if (wpLayer) {
-      wpLayer.style.backgroundImage = '';
-      wpLayer.style.backgroundSize = '';
-      wpLayer.style.backgroundPosition = '';
-      wpLayer.style.backgroundRepeat = '';
-    }
-    var prepPage = document.getElementById('pagePrep');
-    if (prepPage) prepPage.classList.remove('has-wallpaper');
   }
 }
 
@@ -262,16 +265,19 @@ function _doShowPage(name, data) {
     var prepPage = document.getElementById('pagePrep');
     if (prepPage) prepPage.classList.remove('no-gsap');
     buildContent();
+    applyPageWallpaper(name);
+    var _reflow = newEl.offsetHeight;
 
     var contentSelectors = getContentSelectors();
     if (contentSelectors) {
       var items = newEl.querySelectorAll(contentSelectors);
-      if (items.length) gsap.set(items, { opacity: 0, y: 10 });
+      if (items.length) gsap.set(items, { opacity: 0, y: 12 });
     }
 
     PageTransitions.pageTransition(oldEl, newEl, {
-      onVisible: playEntrance,
+      onVisible: function() {},
       onComplete: function() {
+        playEntrance();
         updateState();
         startShowPageCooldown(name);
       }
@@ -282,6 +288,7 @@ function _doShowPage(name, data) {
     if (oldEl) oldEl.classList.remove('active');
     if (newEl) newEl.classList.add('active');
     buildContent();
+    applyPageWallpaper(name);
     updateState();
     startShowPageCooldown(name);
   }
