@@ -34,6 +34,8 @@ function rollDiceAndStart() {
   TurnState.currentRound = 1;
   TurnState.deployCount = { player: 0, enemy: 0 };
   TurnState.difficulty = window.selectedDifficulty || 'easy';
+  // 进入部署阶段时，让背景缓存失效，以便重新绘制红轴线
+  if (typeof invalidateBackgroundCache === 'function') invalidateBackgroundCache();
 
   var benchSlotsLeft = document.querySelectorAll('#benchLeft .bench-slot');
   var benchSlotsRight = document.querySelectorAll('#benchRight .bench-slot');

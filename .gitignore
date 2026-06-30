@@ -11,3 +11,6 @@ Thumbs.db
 
 # Trae internal
 .trae/
+
+# API config (contains secrets)
+assets/api_config.json
