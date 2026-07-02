@@ -3036,3 +3036,418 @@ body.transition-active .ai-opponent-card {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
+
+/* ===== 斗蛐蛐对战模式 ===== */
+.duel-arena-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.duel-arena-header {
+  text-align: center;
+  margin-bottom: 4px;
+}
+.duel-arena-title {
+  font-size: 26px;
+  color: #6b46c1;
+  letter-spacing: 3px;
+  font-family: 'SimSun', serif;
+  margin: 0 0 4px;
+  text-shadow: 0 2px 4px rgba(107, 70, 193, 0.2);
+}
+.duel-arena-sub {
+  font-size: 12px;
+  color: #8a6d4b;
+  letter-spacing: 1px;
+}
+
+.duel-sides {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+.duel-side {
+  flex: 1;
+  background: rgba(245, 236, 215, 0.6);
+  border: 2px solid #c4b290;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.duel-side-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #c4b290;
+}
+.duel-side-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #3d1a00;
+  letter-spacing: 2px;
+  font-family: 'SimSun', serif;
+}
+.duel-side-status {
+  font-size: 11px;
+  color: #8a6d4b;
+  background: rgba(196, 169, 125, 0.2);
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+.duel-side-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.duel-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.duel-setting-label {
+  flex-shrink: 0;
+  width: 64px;
+  font-size: 12px;
+  color: #8b6914;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-align: right;
+}
+.duel-slider-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.duel-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #c4b290;
+  outline: none;
+}
+.duel-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #6b46c1;
+  border: 2px solid #f5ecd7;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.duel-slider-val {
+  width: 22px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: bold;
+  color: #6b46c1;
+  font-family: 'SimSun', serif;
+}
+.duel-diff-btns {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+}
+.duel-diff-btn {
+  flex: 1;
+  padding: 6px 0;
+  font-size: 12px;
+  border: 2px solid #c4b290;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b4c2a;
+  cursor: pointer;
+  font-family: 'SimSun', serif;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.duel-diff-btn:hover {
+  border-color: #b89b6e;
+  background: rgba(196, 169, 125, 0.1);
+}
+.duel-diff-btn.active {
+  border-color: #6b46c1;
+  background: rgba(107, 70, 193, 0.15);
+  color: #553c9a;
+  font-weight: bold;
+}
+.duel-desc-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+.duel-desc-row .duel-setting-label {
+  text-align: left;
+}
+.duel-desc-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 12px;
+  border: 2px solid #c4b290;
+  border-radius: 8px;
+  background: #fff;
+  color: #3d1a00;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.duel-desc-input:focus {
+  border-color: #6b46c1;
+  outline: none;
+}
+.duel-toggle {
+  flex: 1;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: #b0b0b0;
+  color: #fff;
+  text-align: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  transition: background 0.2s;
+  user-select: none;
+}
+.duel-toggle.on {
+  background: #6b46c1;
+}
+.duel-toggle-label {
+  pointer-events: none;
+}
+.duel-gen-btn {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 13px;
+  border: 2px solid #553c9a;
+  border-radius: 8px;
+  background: #6b46c1;
+  color: #fff;
+  cursor: pointer;
+  font-family: 'SimSun', serif;
+  letter-spacing: 2px;
+  transition: all 0.2s;
+}
+.duel-gen-btn:hover {
+  background: #553c9a;
+}
+.duel-gen-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.duel-unit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 60px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.duel-empty-hint {
+  text-align: center;
+  font-size: 11px;
+  color: #8a6d4b;
+  padding: 16px 0;
+}
+.duel-unit-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid #c4b290;
+  border-radius: 8px;
+}
+.duel-unit-img-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+}
+.duel-unit-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.duel-unit-tier {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 9px;
+  color: #fff;
+  padding: 1px 4px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.duel-unit-body {
+  flex: 1;
+  min-width: 0;
+}
+.duel-unit-name {
+  font-size: 12px;
+  color: #3d1a00;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.duel-unit-type {
+  font-size: 11px;
+  color: #8a6d4b;
+  margin-top: 1px;
+}
+
+/* 斗蛐蛐观战模式：暂停按钮 */
+.spectator-pause-btn {
+  display: none;
+  background: rgba(40, 28, 16, 0.85);
+  border: 1px solid #6b4c2a;
+  color: #d4b896;
+  padding: 4px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  margin: 0 auto 4px;
+  transition: all 0.15s;
+}
+.spectator-pause-btn:hover {
+  background: rgba(107, 76, 42, 0.85);
+  color: #fff;
+}
+
+.duel-vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  color: #c0392b;
+  font-family: 'SimSun', serif;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 6px rgba(192, 57, 43, 0.3);
+  flex-shrink: 0;
+  padding: 0 8px;
+}
+
+.duel-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+.duel-start-btn {
+  padding: 10px 36px;
+  font-size: 16px;
+  border: 2px solid #c0392b;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+  color: #fff;
+  cursor: pointer;
+  font-family: 'SimSun', serif;
+  letter-spacing: 4px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(192, 57, 43, 0.3);
+}
+.duel-start-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(192, 57, 43, 0.4);
+}
+.duel-start-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #999;
+  border-color: #888;
+  box-shadow: none;
+}
+
+/* 窄屏：斗蛐蛐双方配置纵向堆叠 */
+@media (max-width: 720px) {
+  .duel-sides {
+    flex-direction: column;
+  }
+  .duel-vs {
+    padding: 4px 0;
+  }
+}
+
+/* ===== 战斗速度调节器 ===== */
+.battle-speed-controls {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(20, 15, 10, 0.6);
+  border: 1px solid #8b6914;
+  border-radius: 8px;
+}
+.battle-speed-controls button {
+  padding: 4px 10px;
+  font-size: 12px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #d4b88a;
+  cursor: pointer;
+  font-family: 'SimSun', serif;
+  letter-spacing: 1px;
+  transition: all 0.15s;
+}
+.battle-speed-controls button:hover {
+  background: rgba(212, 184, 138, 0.15);
+  color: #f5ecd7;
+}
+.battle-speed-controls button.active {
+  background: #8b6914;
+  color: #fff;
+  border-color: #d4a017;
+  font-weight: bold;
+}
+
+/* ===== 斗蛐蛐模式：对战速度调节器 ===== */
+.battle-speed-controls {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  margin: 0 auto 4px;
+  width: fit-content;
+  background: rgba(40, 28, 16, 0.85);
+  border: 1px solid #6b4c2a;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.battle-speed-controls .speed-label {
+  color: #d4b896;
+  font-weight: bold;
+  margin-right: 4px;
+}
+.battle-speed-controls .speed-btn {
+  background: transparent;
+  border: 1px solid #6b4c2a;
+  color: #d4b896;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.15s;
+}
+.battle-speed-controls .speed-btn:hover {
+  background: rgba(212, 184, 150, 0.15);
+}
+.battle-speed-controls .speed-btn.active {
+  background: #6b4c2a;
+  color: #fff;
+  border-color: #8b6914;
+  font-weight: bold;
+}

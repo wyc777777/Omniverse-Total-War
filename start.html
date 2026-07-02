@@ -178,6 +178,11 @@
   <div class="ai-battle-wrap" id="aiBattleContent"></div>
 </div>
 
+<!-- ===== 斗蛐蛐对战模式 ===== -->
+<div class="page" id="pageDuelArena">
+  <div class="duel-arena-wrap" id="duelArenaContent"></div>
+</div>
+
 <!-- ===== 部队选择 ===== -->
 <div class="page" id="pageSelect">
   <div class="select-wrap">
@@ -191,6 +196,14 @@
 <!-- ===== 战场 ===== -->
 <div class="page" id="pageBattle">
   <div class="battle-top-bar">
+    <div class="battle-speed-controls" id="battleSpeedControls" style="display:none;">
+      <span class="speed-label">速度</span>
+      <button class="speed-btn" data-speed="0.5">0.5x</button>
+      <button class="speed-btn active" data-speed="1">1x</button>
+      <button class="speed-btn" data-speed="2">2x</button>
+      <button class="speed-btn" data-speed="5">5x</button>
+    </div>
+    <button class="spectator-pause-btn" id="spectatorPauseBtn" style="display:none;">⏸ 暂停观战</button>
     <div class="turn-panel turn-panel-top" id="turnStatus" style="display:none"></div>
     <div id="turnNotify" class="turn-notify" style="display:none"></div>
   </div>

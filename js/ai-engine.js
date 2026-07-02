@@ -1233,27 +1233,30 @@ function aiExecuteAttack(aiUnit, target) {
 }
 
 // ===== AI 主回合循环 =====
-function runAITurn() {
-  if (TurnState.currentPlayer !== 'enemy' || TurnState.phase !== 'battle') return;
+function runAITurn(team) {
+  // team 参数：指定哪一方是 AI 控制的（默认 'enemy'，斗蛐蛐模式下可能为 'player'）
+  team = team || 'enemy';
+  var enemyTeam = (team === 'enemy') ? 'player' : 'enemy';
+  if (TurnState.currentPlayer !== team || TurnState.phase !== 'battle') return;
 
   initAIState(TurnState.difficulty);
 
   // 强制清除所有AI棋子的移动/攻击标记（防止上回合残留）
   Object.keys(placedPieces).forEach(function(key) {
     var p = placedPieces[key];
-    if (p.team === 'enemy' && !p._routed) {
+    if (p.team === team && !p._routed) {
       p._actionUsedThisTurn = false;
       p._attackedThisTick = false;
       p._chargeDistance = 0;
     }
   });
 
-  var enemyPieces = [];
-  var playerPieces = [];
+  var enemyPieces = [];  // 注意：变量名沿用，实为 AI 己方棋子
+  var playerPieces = [];  // 对方棋子（攻击目标）
   Object.keys(placedPieces).forEach(function(key) {
     var p = placedPieces[key];
     if (p._routed) return;
-    if (p.team === 'enemy') {
+    if (p.team === team) {
       enemyPieces.push({ key: key, piece: p });
     } else {
       playerPieces.push({ key: key, piece: p });
@@ -1261,7 +1264,7 @@ function runAITurn() {
   });
 
   if (enemyPieces.length === 0 || playerPieces.length === 0) {
-    setTimeout(function() { endTurn(); }, 400);
+    setTimeout(function() { endTurn(); }, battleDelay(400));
     return;
   }
 
@@ -1310,7 +1313,7 @@ function runAITurn() {
     _clearAITurnGuard();
     _aiTurnGuard = setTimeout(function() {
       // 10秒仍未结束，强制收尾
-      if (TurnState.phase === 'battle' && TurnState.currentPlayer === 'enemy') {
+      if (TurnState.phase === 'battle' && TurnState.currentPlayer === team) {
         AIState.assignedTargets = {};
         requestRender();
         endTurn();
@@ -1324,7 +1327,7 @@ function runAITurn() {
     var list = [];
     Object.keys(placedPieces).forEach(function(key) {
       var p = placedPieces[key];
-      if (!p._routed && p.team === 'player') {
+      if (!p._routed && p.team === enemyTeam) {
         list.push({ key: key, piece: p });
       }
     });
@@ -1371,7 +1374,7 @@ function runAITurn() {
         if (retreatTarget) aiExecuteMove(unit, retreatTarget);
         AIState.actedThisTurn.add(unit.key);
         requestRender();
-        setTimeout(function() { callback(); }, 350);
+        setTimeout(function() { callback(); }, battleDelay(350));
         return;
       }
 
@@ -1397,7 +1400,7 @@ function runAITurn() {
         AIState.actedThisTurn.add(unit.key);
         checkAndTriggerVictory();
         requestRender();
-        setTimeout(function() { callback(); }, 350);
+        setTimeout(function() { callback(); }, battleDelay(350));
         return;
       }
 
@@ -1424,8 +1427,8 @@ function runAITurn() {
           AIState.actedThisTurn.add(unit.key);
           requestRender();
           checkAndTriggerVictory();
-          setTimeout(function() { callback(); }, 350);
-        }, 350);
+          setTimeout(function() { callback(); }, battleDelay(350));
+        }, battleDelay(350));
         return;
       }
 
@@ -1435,7 +1438,7 @@ function runAITurn() {
       AIState.actedThisTurn.add(unit.key);
       checkAndTriggerVictory();
       requestRender();
-      setTimeout(function() { callback(); }, 350);
+      setTimeout(function() { callback(); }, battleDelay(350));
       return;
     }
 
@@ -1467,8 +1470,8 @@ function runAITurn() {
         }
         AIState.actedThisTurn.add(unit.key);
         requestRender();
-        setTimeout(function() { callback(); }, 350);
-      }, 350);
+        setTimeout(function() { callback(); }, battleDelay(350));
+      }, battleDelay(350));
       return;
     }
 
@@ -1482,7 +1485,7 @@ function runAITurn() {
     if (livePlayer.length === 0) {
       _clearAITurnGuard();
       requestRender();
-      setTimeout(function() { endTurn(); }, 400);
+      setTimeout(function() { endTurn(); }, battleDelay(400));
       return;
     }
 
@@ -1490,7 +1493,7 @@ function runAITurn() {
       _clearAITurnGuard();
       AIState.assignedTargets = {};
       requestRender();
-      setTimeout(function() { endTurn(); }, 500);
+      setTimeout(function() { endTurn(); }, battleDelay(500));
       return;
     }
 
@@ -1503,18 +1506,18 @@ function runAITurn() {
         requestRender();
         setTimeout(function() {
           processNext();
-        }, 250);
+        }, battleDelay(250));
       });
     } catch(e) {
       console.error('AI processUnit error:', e, unit);
       requestRender();
-      setTimeout(function() { processNext(); }, 250);
+      setTimeout(function() { processNext(); }, battleDelay(250));
     }
   }
 
   // 启动安全守护并开始行动
   _setAITurnGuard();
-  setTimeout(function() { processNext(); }, 400);
+  setTimeout(function() { processNext(); }, battleDelay(400));
 }
 
 // ===== 调试 =====
