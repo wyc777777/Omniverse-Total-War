@@ -8,8 +8,71 @@ var TurnState = {
   difficulty: 'easy',
   deployCount: {},
   totalPlayer: 0,
-  totalEnemy: 0
+  totalEnemy: 0,
+  // 斗蛐蛐模式标记
+  isDuelBattle: false,
+  sideAControlledByAI: false,  // 甲方（player 阵营）是否由 AI 控制
+  sideBControlledByAI: false   // 乙方（enemy 阵营）是否由 AI 控制
 };
+
+// ===== 对战速度倍率（斗蛐蛐模式用，默认 1.0，可选 0.5/1/2/5）=====
+var BATTLE_SPEED_MULT = 1.0;
+
+// 观战模式暂停标记（双 AI 对战时玩家可暂停自动推进）
+var _spectatorPaused = false;
+
+// AI 相关延时按倍率缩短（人类回合不受影响）
+function battleDelay(ms) {
+  return ms / BATTLE_SPEED_MULT;
+}
+
+// ===== 对战速度调节器 UI（斗蛐蛐模式用）=====
+function updateBattleSpeedControlsVisibility() {
+  var ctrl = document.getElementById('battleSpeedControls');
+  if (!ctrl) return;
+  ctrl.style.display = TurnState.isDuelBattle ? 'flex' : 'none';
+  // 更新按钮高亮
+  var btns = ctrl.querySelectorAll('.speed-btn');
+  btns.forEach(function(b) {
+    var sp = parseFloat(b.dataset.speed);
+    b.classList.toggle('active', Math.abs(sp - BATTLE_SPEED_MULT) < 0.01);
+  });
+}
+
+function initBattleSpeedControls() {
+  var ctrl = document.getElementById('battleSpeedControls');
+  if (!ctrl || ctrl.dataset.bound === '1') return;
+  ctrl.dataset.bound = '1';
+  ctrl.addEventListener('click', function(e) {
+    var btn = e.target.closest('.speed-btn');
+    if (!btn) return;
+    BATTLE_SPEED_MULT = parseFloat(btn.dataset.speed) || 1.0;
+    updateBattleSpeedControlsVisibility();
+  });
+}
+
+// ===== 观战模式暂停按钮（双 AI 对战时显示）=====
+function updateSpectatorPauseBtnVisibility() {
+  var btn = document.getElementById('spectatorPauseBtn');
+  if (!btn) return;
+  var isSpectator = TurnState.isDuelBattle && isControlledByAI('player') && isControlledByAI('enemy');
+  btn.style.display = isSpectator ? 'inline-block' : 'none';
+  btn.textContent = _spectatorPaused ? '▶ 继续' : '⏸ 暂停观战';
+}
+
+function initSpectatorPauseBtn() {
+  var btn = document.getElementById('spectatorPauseBtn');
+  if (!btn || btn.dataset.bound === '1') return;
+  btn.dataset.bound = '1';
+  btn.addEventListener('click', function() {
+    _spectatorPaused = !_spectatorPaused;
+    updateSpectatorPauseBtnVisibility();
+    // 如果从暂停恢复，且当前是 AI 回合，重新触发 runAITurn
+    if (!_spectatorPaused && TurnState.phase === 'battle' && isControlledByAI(TurnState.currentPlayer)) {
+      setTimeout(function() { runAITurn(TurnState.currentPlayer); }, battleDelay(300));
+    }
+  });
+}
 
 function initTurns() {
   TurnState.currentRound = 0;
@@ -22,6 +85,17 @@ function initTurns() {
   TurnState.totalEnemy = 0;
   document.getElementById('turnStatus').style.display = 'none';
   document.getElementById('warReport').style.display = 'none';
+}
+
+// ===== 判断某阵营是否由 AI 控制 =====
+function isControlledByAI(team) {
+  // 斗蛐蛐模式：按双方 controlFlag 判断
+  if (TurnState.isDuelBattle) {
+    if (team === 'player') return !!TurnState.sideAControlledByAI;
+    if (team === 'enemy') return !!TurnState.sideBControlledByAI;
+  }
+  // 默认：enemy 是 AI，player 是人类
+  return team === 'enemy';
 }
 
 function rollDiceAndStart() {
@@ -65,17 +139,21 @@ function updateDeployUI() {
     '<span style="font-size:11px;color:#6b4c2a">我方 ' + d.player + '/' + TurnState.totalPlayer + ' | 敌方 ' + d.enemy + '/' + TurnState.totalEnemy + '</span> ' +
     '<span style="font-size:10px;color:#8b2500">三轴线(q/r/s=0)禁止放置</span>';
   panel.style.display = 'flex';
-  if (TurnState.currentPlayer === 'enemy') { setTimeout(aiDeployPiece, 500); }
+  if (isControlledByAI(TurnState.currentPlayer)) { setTimeout(aiDeployPiece, battleDelay(500)); }
 }
 
 function aiDeployPiece() {
-  if (TurnState.phase !== 'deploy' || TurnState.currentPlayer !== 'enemy') return;
-  if (TurnState.deployCount.enemy >= TurnState.totalEnemy) { tryEndDeploy(); return; }
+  var team = TurnState.currentPlayer;
+  if (TurnState.phase !== 'deploy') return;
+  if (!isControlledByAI(team)) return;
+  var totalCount = (team === 'enemy') ? TurnState.totalEnemy : TurnState.totalPlayer;
+  if (TurnState.deployCount[team] >= totalCount) { tryEndDeploy(); return; }
 
   var diff = TurnState.difficulty;
 
   // ===== 智能部署：近战先放、远程最后放 =====
-  var benchSlots = document.querySelectorAll('#benchRight .bench-slot');
+  var benchSelector = (team === 'enemy') ? '#benchRight .bench-slot' : '#benchLeft .bench-slot';
+  var benchSlots = document.querySelectorAll(benchSelector);
   var available = [];
   for (var i = 0; i < benchSlots.length; i++) {
     if (!benchSlots[i].classList.contains('empty')) {
@@ -119,16 +197,20 @@ function aiDeployPiece() {
       enemyHexes.push(p.hex);
     }
   }
+  // AI 策略参数：第二参数为「敌方」已放置 hexes，第三参数为「己方」已放置 hexes
+  var oppHexes = (team === 'enemy') ? playerHexes : enemyHexes;
+  var myHexes = (team === 'enemy') ? enemyHexes : playerHexes;
 
   // ===== 收集候选格子（排除三轴和已占）=====
   var cands = [];
-  var enemySideHexes = []; // 敌方半场的格子
+  var mySideSign = (team === 'enemy') ? 1 : -1; // AI 己方半场：enemy 在 q>0，player 在 q<0
+  var enemySideHexes = []; // 己方半场的格子
   hexes.forEach(function(h) {
     var key = h.q + ',' + h.r + ',' + h.s;
     if (placedPieces[key]) return;
     if (h.q === 0 || h.r === 0 || h.s === 0) return;
     cands.push({ key: key, hex: h });
-    if (h.q > 0) enemySideHexes.push({ key: key, hex: h }); // 敌方半场（q>0）
+    if (h.q * mySideSign > 0) enemySideHexes.push({ key: key, hex: h }); // 己方半场
   });
   if (cands.length === 0) return;
 
@@ -138,9 +220,9 @@ function aiDeployPiece() {
     selected = cands[Math.floor(Math.random() * cands.length)];
   } else if (diff === 'hard' || diff === 'legend') {
     if (isRanged) {
-      selected = aiPickRanged(cands, playerHexes, enemyHexes);
+      selected = aiPickRanged(cands, oppHexes, myHexes);
     } else {
-      selected = aiPickFrontline(cands, playerHexes, enemyHexes);
+      selected = aiPickFrontline(cands, oppHexes, myHexes);
     }
   }
 
@@ -150,12 +232,12 @@ function aiDeployPiece() {
 
   var h = selected.hex;
   var key = selected.key;
-  placedPieces[key] = { unitType: unitType, team: 'enemy', slotIdx: slotIdx, hex: { q: h.q, r: h.r, s: h.s } };
+  placedPieces[key] = { unitType: unitType, team: team, slotIdx: slotIdx, hex: { q: h.q, r: h.r, s: h.s } };
   placedPieces[key]._facing = getFacingToCenter(h);
   initPieceRuntimeState(placedPieces[key]);
   benchState[slotIdx] = false;
   benchSlots[getSlotIndexInContainer(benchSlots, slotIdx)].classList.add('empty');
-  TurnState.deployCount.enemy++;
+  TurnState.deployCount[team]++;
   requestRender();
   nextDeployPlayer();
 }
@@ -237,8 +319,9 @@ function getSlotIndexInContainer(container, slotIdx) {
 }
 
 function onPlayerPlacePiece() {
-  if (TurnState.phase !== 'deploy' || TurnState.currentPlayer !== 'player') return;
-  TurnState.deployCount.player++;
+  if (TurnState.phase !== 'deploy') return;
+  if (isControlledByAI(TurnState.currentPlayer)) return; // AI 方不接受人类放置
+  TurnState.deployCount[TurnState.currentPlayer]++;
   requestRender();
   nextDeployPlayer();
 }
@@ -271,7 +354,13 @@ function startBattlePhase() {
   // 第一回合开始：检测包围状态
   processTurnStart(TurnState.firstPlayer);
   updateBattleUI();
-  if (TurnState.currentPlayer === 'enemy') { setTimeout(runAITurn, 600); }
+  if (isControlledByAI(TurnState.currentPlayer)) {
+    // 双 AI 观战模式给玩家更长观看时间（1.5s），否则 600ms；暂停时不触发
+    if (!_spectatorPaused) {
+      var startDelay = (TurnState.isDuelBattle && isControlledByAI('player') && isControlledByAI('enemy')) ? 1500 : 600;
+      setTimeout(function() { runAITurn(TurnState.currentPlayer); }, battleDelay(startDelay));
+    }
+  }
 }
 
 // 回合开始处理（包围检测、主动重整）
@@ -348,6 +437,7 @@ function endTurn() {
   processTurnEnd(currentTeam === 'player' ? 'player' : 'enemy');
 
   if (TurnState.currentPlayer === 'player') {
+    // 切到 enemy 回合
     TurnState.currentPlayer = 'enemy';
     Object.keys(placedPieces).forEach(function(k) {
       if (placedPieces[k].team === 'enemy') {
@@ -358,8 +448,19 @@ function endTurn() {
     });
     processTurnStart('enemy');
     updateBattleUI();
-    setTimeout(runAITurn, 600);
+    // 按 controlFlag 决定是否调 AI（斗蛐蛐模式下乙方可能由人类操作）
+    if (isControlledByAI('enemy')) {
+      // 双 AI 观战模式给玩家更长观看时间（1.5s），否则 600ms；暂停时不触发
+      if (!_spectatorPaused) {
+        var switchDelay = (TurnState.isDuelBattle && isControlledByAI('player') && isControlledByAI('enemy')) ? 1500 : 600;
+        setTimeout(function() { runAITurn('enemy'); }, battleDelay(switchDelay));
+      }
+    } else {
+      // 人类操作的敌方回合，显示提示
+      showTurnNotify(true);
+    }
   } else {
+    // 切到 player 回合
     TurnState.currentPlayer = 'player';
     TurnState.currentRound++;
     Object.keys(placedPieces).forEach(function(k) {
@@ -371,7 +472,16 @@ function endTurn() {
     });
     processTurnStart('player');
     updateBattleUI();
-    showTurnNotify(true);
+    // 按 controlFlag 决定是否调 AI（斗蛐蛐模式下甲方可能由 AI 操作）
+    if (isControlledByAI('player')) {
+      // 双 AI 观战模式给玩家更长观看时间（1.5s），否则 600ms；暂停时不触发
+      if (!_spectatorPaused) {
+        var switchDelay = (TurnState.isDuelBattle && isControlledByAI('player') && isControlledByAI('enemy')) ? 1500 : 600;
+        setTimeout(function() { runAITurn('player'); }, battleDelay(switchDelay));
+      }
+    } else {
+      showTurnNotify(true);
+    }
   }
   requestRender();
 }
@@ -379,12 +489,30 @@ function endTurn() {
 function updateBattleUI() {
   var panel = document.getElementById('turnStatus');
   if (TurnState.phase !== 'battle') return;
+  initBattleSpeedControls();
+  updateBattleSpeedControlsVisibility();
+  initSpectatorPauseBtn();
+  updateSpectatorPauseBtnVisibility();
   var dl = { easy: '简单', hard: '困难', legend: '传说' }[TurnState.difficulty] || '简单';
   var isPlayerTurn = TurnState.currentPlayer === 'player';
-  var who = isPlayerTurn ? ('🔷 我方回合 （第' + TurnState.currentRound + '回合 · ' + dl + '难度）') : ('🔶 敌方回合（第' + TurnState.currentRound + '回合 · ' + dl + '难度）');
-  var tipText = isPlayerTurn ? '<span style="font-size:12px;color:#6b4c2a;margin-left:8px">选己方棋子 → 移动（绿）或攻击（红）</span>' : '<span style="font-size:12px;color:#8b2500;margin-left:8px;font-weight:bold">⏳ AI 思考中...</span>';
-  var btnState = isPlayerTurn ? '' : 'disabled';
-  var btnText = isPlayerTurn ? '结束回合 →' : '敌方行动中...';
+  var sideLabel;
+  if (TurnState.isDuelBattle) {
+    sideLabel = isPlayerTurn ? '甲方' : '乙方';
+  } else {
+    sideLabel = isPlayerTurn ? '我方' : '敌方';
+  }
+  var who = isPlayerTurn ? ('🔷 ' + sideLabel + '回合（第' + TurnState.currentRound + '回合 · ' + dl + '难度）') : ('🔶 ' + sideLabel + '回合（第' + TurnState.currentRound + '回合 · ' + dl + '难度）');
+
+  // 提示文字：斗蛐蛐模式下根据是否 AI 控制决定提示
+  var isAITurn = isControlledByAI(TurnState.currentPlayer);
+  var tipText;
+  if (isAITurn) {
+    tipText = '<span style="font-size:12px;color:#8b2500;margin-left:8px;font-weight:bold">⏳ AI 思考中...</span>';
+  } else {
+    tipText = '<span style="font-size:12px;color:#6b4c2a;margin-left:8px">选' + sideLabel + '棋子 → 移动（绿）或攻击（红）</span>';
+  }
+  var btnState = isAITurn ? 'disabled' : '';
+  var btnText = isAITurn ? (sideLabel + '行动中...') : '结束回合 →';
 
   var wasHidden = panel.style.display !== 'flex';
   panel.innerHTML = '<div class="turn-info"><span style="font-weight:bold;font-size:17px">' + who + '</span>' + tipText + '</div>' +

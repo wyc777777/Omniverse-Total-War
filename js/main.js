@@ -91,6 +91,17 @@ function initPagePanels() {
         }
       }
     },
+    DuelArena: {
+      elementId: 'pageDuelArena',
+      buildFn: function() { if (typeof buildDuelArenaPage === 'function') buildDuelArenaPage(); },
+      contentSelector: '.duel-side, .duel-vs, .duel-actions',
+      entranceDelay: 0.04,
+      entranceFn: function() {
+        if (window.PageTransitions) {
+          PageTransitions.staggerItems('.duel-side, .duel-vs, .duel-actions', null, 0.04);
+        }
+      }
+    },
     Levels: {
       elementId: 'pageLevels',
       buildFn: function() { if (typeof buildLevelsPage === 'function') buildLevelsPage(); },
@@ -209,6 +220,7 @@ function _doShowPage(name, data) {
         else if (name === 'Shop') { if (typeof buildShop === 'function') buildShop(); }
         else if (name === 'Summon') { if (typeof buildSummonPage === 'function') buildSummonPage(); }
         else if (name === 'AIBattle') { if (typeof buildAIBattlePage === 'function') buildAIBattlePage(); }
+        else if (name === 'DuelArena') { if (typeof buildDuelArenaPage === 'function') buildDuelArenaPage(); }
         else if (name === 'Levels') { if (typeof buildLevelsPage === 'function') buildLevelsPage(); }
       }
     } catch(e) {
@@ -236,6 +248,8 @@ function _doShowPage(name, data) {
         PageTransitions.staggerItems('.summon-tier-card', null, 0.05);
       } else if (name === 'AIBattle') {
         PageTransitions.staggerItems('.ai-btn, .ai-opponent-card, .ai-empty-hint', null, 0.04);
+      } else if (name === 'DuelArena') {
+        PageTransitions.staggerItems('.duel-side, .duel-vs, .duel-actions', null, 0.04);
       } else if (name === 'Levels') {
         PageTransitions.staggerItems('.level-card', null, 0.04);
       }
@@ -253,6 +267,7 @@ function _doShowPage(name, data) {
     else if (name === 'Shop') return '.shop-card';
     else if (name === 'Summon') return '.summon-tier-card';
     else if (name === 'AIBattle') return '.ai-btn, .ai-opponent-card, .ai-empty-hint';
+    else if (name === 'DuelArena') return '.duel-side, .duel-vs, .duel-actions';
     else if (name === 'Levels') return '.level-card, .levels-overview';
     return '';
   }
@@ -354,6 +369,19 @@ function goBack() {
   // 战斗页面：必须走 exitBattle 完整清理流程，避免战场状态残留
   if (currentPage === 'Battle') {
     exitBattle();
+    return;
+  }
+  // 斗蛐蛐配置页面：返回时清理已生成的临时单位
+  if (currentPage === 'DuelArena') {
+    if (typeof DUEL_STATE !== 'undefined') {
+      if (DUEL_STATE.sideA && typeof clearAIOpponentUnitsForDuelSide === 'function') {
+        clearAIOpponentUnitsForDuelSide('A');
+      }
+      if (DUEL_STATE.sideB && typeof clearAIOpponentUnitsForDuelSide === 'function') {
+        clearAIOpponentUnitsForDuelSide('B');
+      }
+    }
+    showPage('Prep');
     return;
   }
   if (window.PanelManager) {
@@ -535,6 +563,22 @@ function exitBattle() {
   // 清除AI对战残留的临时单位、种族、装备
   if (typeof clearAIOpponentUnits === 'function') {
     clearAIOpponentUnits([]);
+  }
+
+  // 清除斗蛐蛐对战残留：双方临时单位、TurnState 标记
+  if (window._duelBattleData) {
+    var duelKeepIds = [];
+    if (typeof DUEL_STATE !== 'undefined') {
+      DUEL_STATE.sideA = null;
+      DUEL_STATE.sideB = null;
+      DUEL_STATE.bothGenerated = false;
+    }
+    window._duelBattleData = null;
+    if (typeof TurnState !== 'undefined') {
+      TurnState.isDuelBattle = false;
+      TurnState.sideAControlledByAI = false;
+      TurnState.sideBControlledByAI = false;
+    }
   }
 
   // 统一走 showPage 逻辑，确保动画一致

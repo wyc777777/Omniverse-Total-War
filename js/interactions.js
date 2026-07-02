@@ -40,7 +40,9 @@ function initInteractions() {
     if (placedPieces[key]) return;
 
     if (TurnState.phase === 'deploy') {
-      if (d.team !== 'player' || TurnState.currentPlayer !== 'player') return;
+      // 仅当前部署方（且非 AI 控制）的棋子可放置
+      if (d.team !== TurnState.currentPlayer) return;
+      if (isControlledByAI(TurnState.currentPlayer)) return;
       if (h.q === 0 || h.r === 0 || h.s === 0) return;
     }
     if (TurnState.phase === 'battle') return;
@@ -65,6 +67,8 @@ function initInteractions() {
   // ===== 点击 =====
   var lcT = 0, lcK = '';
   _clickHandler = function(e) {
+    // 双 AI 观战模式：不允许任何手动操作
+    if (TurnState.isDuelBattle && isControlledByAI('player') && isControlledByAI('enemy')) return;
     var rect = canvas.getBoundingClientRect(), h = pix2hex((e.clientX - rect.left) * canvas.width / rect.width, (e.clientY - rect.top) * canvas.height / rect.height);
     if (!h) { deselectAll(); requestRender(); return; }
     var key = h.q + ',' + h.r + ',' + h.s, now = Date.now(), dbl = (key === lcK && now - lcT < 350); lcT = now; lcK = key;

@@ -44,6 +44,16 @@ var AI_BATTLE_STATE = {
   statMultiplier: 1.00     // 属性倍率（默认1.00=不变）
 };
 
+// ===== 斗蛐蛐对战模式状态 =====
+// sideA  = 甲方（player 阵营）  sideB = 乙方（enemy 阵营）
+// 每侧结构：{ name, tier, units:[unitDef,...], controlledByAI:bool }
+var DUEL_STATE = {
+  sideA: null,
+  sideB: null,
+  bothGenerated: false
+};
+
+
 // AI单位类型唯一计数器
 var AI_UNIT_TYPE_COUNTER = 0;
 
@@ -546,6 +556,7 @@ function buildAIBattlePage() {
   actions.className = 'ai-battle-actions';
   actions.innerHTML =
     '<button class="ai-btn ai-btn-primary" id="aiFindBtn">🔍 跨次元搜寻</button>' +
+    '<button class="ai-btn" id="duelModeBtn" style="background:#6b46c1;color:#fff;border-color:#553c9a;">🐛 斗蛐蛐模式</button>' +
     '<button class="ai-btn ai-btn-back" onclick="showPage(\'Prep\')">← 返回</button>';
   wrap.appendChild(actions);
 
@@ -595,6 +606,10 @@ function buildAIBattlePage() {
   // 搜寻按钮
   var findBtn = document.getElementById('aiFindBtn');
   if (findBtn) findBtn.addEventListener('click', onFindAIOpponent);
+
+  // 斗蛐蛐模式入口
+  var duelBtn = document.getElementById('duelModeBtn');
+  if (duelBtn) duelBtn.addEventListener('click', function() { showPage('DuelArena'); });
 
   if (AI_BATTLE_STATE.currentOpponent) {
     refreshAIOpponentDisplay();
@@ -1778,3 +1793,419 @@ window.skipAIBattleReward = skipAIBattleReward;
 window.closeAIBattleSettlement = closeAIBattleSettlement;
 window.injectAIOpponentUnits = injectAIOpponentUnits;
 window.clearAIOpponentUnits = clearAIOpponentUnits;
+
+// ==================== 斗蛐蛐对战模式 ====================
+
+// ===== 构建斗蛐蛐双方配置页 =====
+function buildDuelArenaPage() {
+  var wrap = document.getElementById('duelArenaContent');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  // 标题区
+  var header = document.createElement('div');
+  header.className = 'duel-arena-header';
+  header.innerHTML =
+    '<h2 class="duel-arena-title">🐛 斗蛐蛐竞技场</h2>' +
+    '<div class="duel-arena-sub">分别为双方生成阵容，让 AI 自动模拟对战</div>';
+  wrap.appendChild(header);
+
+  // 双方配置区（左右两栏 + 中间 VS）
+  var sides = document.createElement('div');
+  sides.className = 'duel-sides';
+
+  sides.appendChild(buildDuelSidePanel('A', '🛡 甲方'));
+
+  var vs = document.createElement('div');
+  vs.className = 'duel-vs';
+  vs.textContent = 'VS';
+  sides.appendChild(vs);
+
+  sides.appendChild(buildDuelSidePanel('B', '⚔ 乙方'));
+  wrap.appendChild(sides);
+
+  // 底部按钮区
+  var actions = document.createElement('div');
+  actions.className = 'duel-actions';
+  actions.innerHTML =
+    '<button class="duel-start-btn" id="duelStartBtn" disabled>⚔ 开战</button>' +
+    '<button class="ai-btn ai-btn-back" onclick="showPage(\'Prep\')">← 返回</button>';
+  wrap.appendChild(actions);
+
+  // 绑定两侧事件
+  bindDuelSideEvents('A');
+  bindDuelSideEvents('B');
+
+  // 开战按钮
+  var startBtn = document.getElementById('duelStartBtn');
+  if (startBtn) startBtn.addEventListener('click', startDuelBattle);
+
+  // 回填已生成的阵容
+  if (DUEL_STATE.sideA) renderDuelSideUnits('A');
+  if (DUEL_STATE.sideB) renderDuelSideUnits('B');
+  refreshDuelStartBtn();
+}
+
+// ===== 构建单方配置面板 =====
+function buildDuelSidePanel(side, titleText) {
+  var panel = document.createElement('div');
+  panel.className = 'duel-side';
+  panel.innerHTML =
+    '<div class="duel-side-header">' +
+      '<div class="duel-side-title">' + titleText + '</div>' +
+      '<div class="duel-side-status" id="duelStatus' + side + '">未生成</div>' +
+    '</div>' +
+    '<div class="duel-side-settings">' +
+      // 兵团数量
+      '<div class="duel-setting-row">' +
+        '<label class="duel-setting-label">兵团数量</label>' +
+        '<div class="duel-slider-wrap">' +
+          '<input type="range" id="duelUnitCount' + side + '" min="3" max="10" value="4" class="duel-slider">' +
+          '<span class="duel-slider-val" id="duelUnitCountVal' + side + '">4</span>' +
+        '</div>' +
+      '</div>' +
+      // 指挥官水平
+      '<div class="duel-setting-row">' +
+        '<label class="duel-setting-label">指挥官</label>' +
+        '<div class="duel-diff-btns" id="duelIntelBtns' + side + '">' +
+          '<button class="duel-diff-btn" data-intel="easy">简单</button>' +
+          '<button class="duel-diff-btn active" data-intel="hard">困难</button>' +
+          '<button class="duel-diff-btn" data-intel="legend">传说</button>' +
+        '</div>' +
+      '</div>' +
+      // 部队水平
+      '<div class="duel-setting-row">' +
+        '<label class="duel-setting-label">部队</label>' +
+        '<div class="duel-diff-btns" id="duelStrengthBtns' + side + '">' +
+          '<button class="duel-diff-btn" data-strength="easy">简单</button>' +
+          '<button class="duel-diff-btn active" data-strength="hard">困难</button>' +
+          '<button class="duel-diff-btn" data-strength="legend">传说</button>' +
+        '</div>' +
+      '</div>' +
+      // 背景描述
+      '<div class="duel-setting-row duel-desc-row">' +
+        '<label class="duel-setting-label">背景描述</label>' +
+        '<textarea id="duelDesc' + side + '" class="duel-desc-input" rows="3" placeholder="可填背景设定，例如：&#10;- 来自北境的霜狼军团&#10;- 古代遗迹中苏醒的机械傀儡&#10;- 留空则随机生成"></textarea>' +
+      '</div>' +
+      // AI 控制开关（默认 ON，有 .on 表示 AI）
+      '<div class="duel-setting-row">' +
+        '<label class="duel-setting-label">AI 控制</label>' +
+        '<div class="duel-toggle on" id="duelToggle' + side + '">' +
+          '<span class="duel-toggle-label">AI</span>' +
+        '</div>' +
+      '</div>' +
+      // 生成按钮
+      '<div class="duel-setting-row">' +
+        '<button class="duel-gen-btn" id="duelGenBtn' + side + '">🔍 生成阵容</button>' +
+      '</div>' +
+    '</div>' +
+    // 单位列表区
+    '<div class="duel-unit-list" id="duelUnitList' + side + '">' +
+      '<div class="duel-empty-hint">点击「生成阵容」后展示</div>' +
+    '</div>';
+  return panel;
+}
+
+// ===== 绑定单方事件 =====
+function bindDuelSideEvents(side) {
+  // 兵团数量滑块
+  var slider = document.getElementById('duelUnitCount' + side);
+  var sliderVal = document.getElementById('duelUnitCountVal' + side);
+  if (slider && sliderVal) {
+    slider.addEventListener('input', function() {
+      sliderVal.textContent = slider.value;
+    });
+  }
+
+  // 指挥官水平按钮组
+  var intelBtns = document.querySelectorAll('#duelIntelBtns' + side + ' .duel-diff-btn');
+  intelBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      intelBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    });
+  });
+
+  // 部队水平按钮组
+  var strBtns = document.querySelectorAll('#duelStrengthBtns' + side + ' .duel-diff-btn');
+  strBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      strBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    });
+  });
+
+  // AI 控制开关（.on 表示 AI，否则表示人类）
+  var toggle = document.getElementById('duelToggle' + side);
+  if (toggle) {
+    toggle.addEventListener('click', function() {
+      toggle.classList.toggle('on');
+      var label = toggle.querySelector('.duel-toggle-label');
+      if (label) label.textContent = toggle.classList.contains('on') ? 'AI' : '人类';
+    });
+  }
+
+  // 生成阵容按钮
+  var genBtn = document.getElementById('duelGenBtn' + side);
+  if (genBtn) genBtn.addEventListener('click', function() { onDuelGenerateSide(side); });
+}
+
+// ===== 生成单方阵容 =====
+function onDuelGenerateSide(side) {
+  var descInput = document.getElementById('duelDesc' + side);
+  var slider = document.getElementById('duelUnitCount' + side);
+  var toggle = document.getElementById('duelToggle' + side);
+  var genBtn = document.getElementById('duelGenBtn' + side);
+  var statusEl = document.getElementById('duelStatus' + side);
+
+  var description = descInput ? descInput.value.trim() : '';
+  var unitCount = slider ? Number(slider.value) : 4;
+  var activeIntel = document.querySelector('#duelIntelBtns' + side + ' .duel-diff-btn.active');
+  var activeStrength = document.querySelector('#duelStrengthBtns' + side + ' .duel-diff-btn.active');
+  var intelligence = activeIntel ? activeIntel.dataset.intel : 'hard';
+  var strength = activeStrength ? activeStrength.dataset.strength : 'hard';
+  var controlledByAI = toggle ? toggle.classList.contains('on') : true;
+
+  // 清理上一次该侧的临时单位
+  clearAIOpponentUnitsForDuelSide(side);
+
+  // 生成中状态
+  if (genBtn) {
+    genBtn.disabled = true;
+    genBtn.textContent = '⏳ 生成中...';
+  }
+  if (statusEl) statusEl.textContent = '生成中...';
+
+  var fetchOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      description: description,
+      unitCount: unitCount,
+      intelligence: intelligence,
+      strength: strength
+    })
+  };
+
+  fetch('/api/ai-battle-generate', fetchOptions)
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.ok) {
+      throw new Error(data.error || '生成失败');
+    }
+    var opponent = convertAIGeneratedOpponent(data);
+    opponent.controlledByAI = controlledByAI;
+
+    if (side === 'A') DUEL_STATE.sideA = opponent;
+    else DUEL_STATE.sideB = opponent;
+
+    injectAIOpponentUnits(opponent);
+    renderDuelSideUnits(side);
+
+    if (statusEl) statusEl.textContent = '已生成 · ' + opponent.units.length + ' 兵团';
+
+    if (DUEL_STATE.sideA && DUEL_STATE.sideB) {
+      DUEL_STATE.bothGenerated = true;
+    }
+    refreshDuelStartBtn();
+
+    if (typeof showToast === 'function') {
+      showToast(side === 'A' ? '甲方阵容已生成' : '乙方阵容已生成', 'success');
+    }
+  })
+  .catch(function(err) {
+    if (typeof showToast === 'function') {
+      showToast('生成失败：' + err.message, 'error');
+    }
+    if (statusEl) statusEl.textContent = '生成失败';
+  })
+  .finally(function() {
+    if (genBtn) {
+      genBtn.disabled = false;
+      genBtn.textContent = '🔍 生成阵容';
+    }
+  });
+}
+
+// ===== 渲染单方单位列表（缩略卡片：图标+名称+品阶+typeName）=====
+function renderDuelSideUnits(side) {
+  var listEl = document.getElementById('duelUnitList' + side);
+  if (!listEl) return;
+  var opp = (side === 'A') ? DUEL_STATE.sideA : DUEL_STATE.sideB;
+  if (!opp || !opp.units || opp.units.length === 0) {
+    listEl.innerHTML = '<div class="duel-empty-hint">点击「生成阵容」后展示</div>';
+    return;
+  }
+  var html = '';
+  opp.units.forEach(function(u) {
+    var unitTierInfo = AI_TIER_DIFFICULTY[u.tier] || AI_TIER_DIFFICULTY.iron;
+    html += '<div class="duel-unit-card" style="border-color:' + unitTierInfo.color + '">';
+    html +=   '<div class="duel-unit-img-wrap"><img class="duel-unit-img" src="' + u.image + '" alt="" onerror="this.style.display=\'none\'"><span class="duel-unit-tier" style="background:' + unitTierInfo.color + '">' + unitTierInfo.label + '</span></div>';
+    html +=   '<div class="duel-unit-body">';
+    html +=     '<div class="duel-unit-name">' + u.icon + ' ' + escapeHtml(u.name) + '</div>';
+    html +=     '<div class="duel-unit-type">' + u.typeName + '</div>';
+    html +=   '</div>';
+    html += '</div>';
+  });
+  listEl.innerHTML = html;
+}
+
+// ===== 清理斗蛐蛐某侧临时单位 =====
+// 读取该侧 units 收集 unit.id，调用 clearAIOpponentUnits 清理 UD/ED/RD 中的临时数据，然后清空该侧状态
+function clearAIOpponentUnitsForDuelSide(side) {
+  // clearAIOpponentUnits(keepUnitIds) 的语义是"保留 keepUnitIds 中的临时单位"
+  // 因此清理本侧时，要传入"另一侧"的 unit ids 才能保留对方
+  var otherOpp = (side === 'A') ? DUEL_STATE.sideB : DUEL_STATE.sideA;
+  var keepIds = [];
+  if (otherOpp && otherOpp.units) {
+    keepIds = otherOpp.units.map(function(u) { return u.id; });
+  }
+  clearAIOpponentUnits(keepIds);
+
+  // 清空本侧状态
+  if (side === 'A') DUEL_STATE.sideA = null;
+  else DUEL_STATE.sideB = null;
+  DUEL_STATE.bothGenerated = false;
+  refreshDuelStartBtn();
+}
+
+// ===== 刷新开战按钮可用状态 =====
+function refreshDuelStartBtn() {
+  var startBtn = document.getElementById('duelStartBtn');
+  if (!startBtn) return;
+  if (DUEL_STATE.sideA && DUEL_STATE.sideB && DUEL_STATE.bothGenerated) {
+    startBtn.disabled = false;
+  } else {
+    startBtn.disabled = true;
+  }
+}
+
+// ===== 开战入口 =====
+// 只设置数据并跳转，由 confirmBattle 接管（confirmBattle 中读取 _duelBattleData）
+function startDuelBattle() {
+  if (!DUEL_STATE.sideA || !DUEL_STATE.sideB) {
+    if (typeof showToast === 'function') showToast('请先为双方生成阵容', 'warning');
+    return;
+  }
+  // 直接设置 BT 数据并跳转 Battle，跳过 Select 选兵阶段
+  // （斗蛐蛐模式下双方单位都来自 AI 生成，不需要从兵营选兵）
+  window._duelBattleData = {
+    sideA: DUEL_STATE.sideA,
+    sideB: DUEL_STATE.sideB
+  };
+  if (typeof TurnState !== 'undefined') {
+    TurnState.isDuelBattle = true;
+    TurnState.sideAControlledByAI = !!DUEL_STATE.sideA.controlledByAI;
+    TurnState.sideBControlledByAI = !!DUEL_STATE.sideB.controlledByAI;
+  }
+  // 重置对战速度倍率为默认 1.0（避免上局设置残留）
+  if (typeof BATTLE_SPEED_MULT !== 'undefined') BATTLE_SPEED_MULT = 1.0;
+  // 重置观战模式暂停标记（避免上局残留）
+  if (typeof _spectatorPaused !== 'undefined') _spectatorPaused = false;
+  var playerTypes = DUEL_STATE.sideA.units.map(function(u) { return u.type; });
+  var enemyTypes = DUEL_STATE.sideB.units.map(function(u) { return u.type; });
+  if (typeof BT !== 'undefined') {
+    BT = { player: playerTypes, enemy: enemyTypes };
+  } else {
+    window.BT = { player: playerTypes, enemy: enemyTypes };
+  }
+  showPage('Battle');
+}
+
+// ===== 暴露斗蛐蛐模式给全局 =====
+window.buildDuelArenaPage = buildDuelArenaPage;
+window.onDuelGenerateSide = onDuelGenerateSide;
+window.startDuelBattle = startDuelBattle;
+window.DUEL_STATE = DUEL_STATE;
+window.clearAIOpponentUnitsForDuelSide = clearAIOpponentUnitsForDuelSide;
+
+// ===== 斗蛐蛐模式结算：弹出胜利者提示 =====
+function showDuelBattleSettlement(result) {
+  if (typeof DUEL_STATE === 'undefined' || (!DUEL_STATE.sideA && !DUEL_STATE.sideB)) {
+    return false; // 无斗蛐蛐数据，回退普通结算
+  }
+
+  var sideAName = DUEL_STATE.sideA ? (DUEL_STATE.sideA.name || '甲方') : '甲方';
+  var sideBName = DUEL_STATE.sideB ? (DUEL_STATE.sideB.name || '乙方') : '乙方';
+
+  var winnerSide = result.winner; // 'player' = 甲方胜，'enemy' = 乙方胜
+  var winnerName = winnerSide === 'player' ? sideAName : sideBName;
+  var loserName = winnerSide === 'player' ? sideBName : sideAName;
+
+  // 移除已有弹窗
+  var existing = document.getElementById('duelSettlementModal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'duelSettlementModal';
+  modal.style.cssText =
+    'position:fixed;top:0;left:0;width:100%;height:100%;' +
+    'background:rgba(20,15,10,0.88);display:flex;' +
+    'align-items:center;justify-content:center;z-index:1000;' +
+    'overflow-y:auto;padding:20px 0;';
+
+  var html = '';
+  html += '<div style="background:linear-gradient(135deg,#f5ecd7 0%,#e8dcc0 100%);' +
+          'border:3px solid #d4a017;border-radius:16px;padding:32px 40px;' +
+          'max-width:560px;width:88%;text-align:center;box-shadow:0 0 60px rgba(212,160,23,0.3);' +
+          'margin:auto;">';
+
+  // 标题
+  html += '<div style="font-size:56px;margin-bottom:8px">🏆</div>';
+  html += '<h2 style="font-size:36px;color:#d4a017;margin:0 0 8px;letter-spacing:6px;font-family:SimSun,serif;">胜 利</h2>';
+  html += '<div style="font-size:20px;color:#3d2b1a;margin-bottom:20px;font-weight:bold">胜利者：<span style="color:#d4a017;font-size:24px">' + escapeHtml(winnerName) + '</span></div>';
+
+  // 战损统计
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;text-align:left">';
+  html +=   '<div style="background:rgba(107,142,35,0.12);border:1px solid #6b8e23;border-radius:8px;padding:12px">';
+  html +=     '<div style="font-size:13px;color:#6b8e23;font-weight:bold;margin-bottom:4px">🔷 ' + escapeHtml(sideAName) + '（甲方）</div>';
+  html +=     '<div style="font-size:13px;color:#3d2b1a">存活 <b style="color:#6b8e23">' + result.playerAlive + '</b> · 溃逃 <b style="color:#8b2500">' + result.playerRouted + '</b></div>';
+  html +=   '</div>';
+  html +=   '<div style="background:rgba(139,37,0,0.1);border:1px solid #8b2500;border-radius:8px;padding:12px">';
+  html +=     '<div style="font-size:13px;color:#8b2500;font-weight:bold;margin-bottom:4px">🔶 ' + escapeHtml(sideBName) + '（乙方）</div>';
+  html +=     '<div style="font-size:13px;color:#3d2b1a">存活 <b style="color:#8b2500">' + result.enemyAlive + '</b> · 溃逃 <b style="color:#8b2500">' + result.enemyRouted + '</b></div>';
+  html +=   '</div>';
+  html += '</div>';
+
+  // 结算说明
+  html += '<div style="font-size:14px;color:#8a6d4b;margin-bottom:20px">' + escapeHtml(loserName) + ' 全军覆没，' + escapeHtml(winnerName) + ' 赢得本场对决！</div>';
+
+  // 返回按钮
+  html += '<div style="display:flex;gap:12px;justify-content:center;">';
+  html +=   '<button onclick="closeDuelSettlementAndReturn()" style="padding:12px 28px;font-size:15px;border:2px solid #d4a017;border-radius:10px;background:linear-gradient(135deg,#f5ecd7 0%,#e8dcc0 100%);color:#3d1a00;cursor:pointer;font-family:SimSun,serif;letter-spacing:3px;font-weight:bold">📜 返回斗蛐蛐</button>';
+  html += '</div>';
+
+  html += '</div>';
+  modal.innerHTML = html;
+  document.body.appendChild(modal);
+
+  // 入场动画
+  if (window.gsap) {
+    var modalContent = modal.firstElementChild;
+    gsap.fromTo(modal, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+    if (modalContent) {
+      gsap.fromTo(modalContent,
+        { opacity: 0, scale: 0.8, y: 30 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: 'back.out(1.7)' }
+      );
+    }
+  }
+
+  return true;
+}
+
+function closeDuelSettlementAndReturn() {
+  var modal = document.getElementById('duelSettlementModal');
+  if (modal) modal.remove();
+  // 清理战斗状态
+  if (typeof exitBattle === 'function') {
+    exitBattle();
+  }
+  // 返回斗蛐蛐配置页
+  if (typeof showPage === 'function') {
+    showPage('DuelArena');
+  }
+}
+
+window.showDuelBattleSettlement = showDuelBattleSettlement;
+window.closeDuelSettlementAndReturn = closeDuelSettlementAndReturn;

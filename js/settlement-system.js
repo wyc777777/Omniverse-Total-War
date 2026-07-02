@@ -77,6 +77,20 @@ function triggerBattleEnd(result) {
     }
   }
 
+  // 斗蛐蛐结算（双 AI 观战或双人手操）
+  var isDuelBattle = false;
+  if (typeof TurnState !== 'undefined' && TurnState.isDuelBattle) isDuelBattle = true;
+  else if (typeof DUEL_STATE !== 'undefined' && (DUEL_STATE.sideA || DUEL_STATE.sideB)) isDuelBattle = true;
+
+  if (isDuelBattle && typeof showDuelBattleSettlement === 'function') {
+    var handled = showDuelBattleSettlement(result);
+    if (handled) {
+      var duelWarReport = document.getElementById('warReport');
+      if (duelWarReport) duelWarReport.style.display = 'none';
+      return;
+    }
+  }
+
   var warReport = document.getElementById('warReport');
   if (warReport) warReport.style.display = 'none';
 }
