@@ -14,3 +14,7 @@ Thumbs.db
 
 # API config (contains secrets)
 assets/api_config.json
+
+# WorkBuddy / Trae internal
+.workbuddy/
+.trae-html-share-packages/
