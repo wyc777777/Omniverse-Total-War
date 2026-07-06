@@ -1,3 +1,4 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== 页面流程控制器 ====================
 var currentPage = '';
 
@@ -574,12 +575,37 @@ function exitBattle() {
       DUEL_STATE.bothGenerated = false;
     }
     window._duelBattleData = null;
-    if (typeof TurnState !== 'undefined') {
-      TurnState.isDuelBattle = false;
-      TurnState.sideAControlledByAI = false;
-      TurnState.sideBControlledByAI = false;
-    }
   }
+
+  // 重置记分板（含溃散归档数据）
+  if (typeof Scoreboard !== 'undefined') {
+    Scoreboard.damage = { player: 0, enemy: 0 };
+    Scoreboard.kills = { player: 0, enemy: 0 };
+    Scoreboard.routedArchive = [];
+  }
+
+  // 重置所有对战类型标记（防止关卡/斗蛐蛐/AI对战之间状态泄露）
+  if (typeof TurnState !== 'undefined') {
+    TurnState.isDuelBattle = false;
+    TurnState.isLevelBattle = false;
+    TurnState.isAIBattle = false;
+    TurnState.sideAControlledByAI = false;
+    TurnState.sideBControlledByAI = false;
+  }
+
+  // 清除关卡/AI对战运行时状态（防止结算时 else-if 兜底误判对战类型）
+  if (typeof LEVEL_BATTLE_STATE !== 'undefined') {
+    LEVEL_BATTLE_STATE.currentLevelOpponent = null;
+    window._currentLevelId = null;
+    window._currentLevelOpponent = null;
+  }
+  if (typeof AI_BATTLE_STATE !== 'undefined') {
+    AI_BATTLE_STATE.currentOpponent = null;
+  }
+
+  // 清空作战日志、恢复备战席显示（须在 TurnState 标记重置之后）
+  if (typeof clearCombatLog === 'function') clearCombatLog();
+  if (typeof updateScoreboardUI === 'function') updateScoreboardUI();
 
   // 统一走 showPage 逻辑，确保动画一致
   showPage('Prep');

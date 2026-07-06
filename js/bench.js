@@ -1,3 +1,4 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== 备战席系统 ====================
 var BPS = 10; var benchState = [];
 function initBench() {

@@ -1,3 +1,4 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md
 // ==================== AI对战基础框架 ====================
 // 流程：寻找对手（生成AI对手）→ 进入战斗 → 胜利后选择获得对方一个兵种
 // 对手生成复用 summon-engine 的思路（简化版独立函数），战斗复用现有 combat 系统
@@ -355,6 +356,18 @@ function pickMountByTierAndType(tier, requireFlying) {
   return pool[Math.floor(Math.random() * pool.length)].id;
 }
 
+// ===== 智能裁剪名字：去掉破折号后缀，再限制长度 =====
+function trimNameLen(name, maxLen) {
+  if (!name) return name;
+  // 去掉破折号及其后面的描述后缀（——、—、--）
+  var dashIdx = name.indexOf('——');
+  if (dashIdx < 0) dashIdx = name.indexOf('—');
+  if (dashIdx < 0) dashIdx = name.indexOf('--');
+  if (dashIdx > 0) name = name.substring(0, dashIdx).trim();
+  if (name.length > maxLen) name = name.substring(0, maxLen);
+  return name;
+}
+
 // ===== 兵种名/背景生成 =====
 function generateAIUnitName(baseType, raceData, tier, index) {
   var tierLabel = (AI_TIER_DIFFICULTY[tier] || {}).label || '';
@@ -362,7 +375,19 @@ function generateAIUnitName(baseType, raceData, tier, index) {
     infantry: '步卒', cavalry: '骑手', archer: '射手', flying: '飞兵', beast_infantry: '兽群'
   };
   var prefix = ['血', '铁', '影', '焰', '霜', '雷', '钢', '夜', '黑', '赤'][Math.floor(Math.random()*10)];
-  return prefix + tierLabel + (raceData ? raceData.name : '') + (typeNames[baseType] || '兵团') + '·' + (index + 1);
+  var raceName = raceData ? raceData.name : '';
+  var typeName = typeNames[baseType] || '兵团';
+  var name = prefix + tierLabel + raceName + typeName + '·' + (index + 1);
+  if (name.length > 10) {
+    name = prefix + tierLabel + typeName + '·' + (index + 1);
+  }
+  if (name.length > 10) {
+    name = prefix + typeName + '·' + (index + 1);
+  }
+  if (name.length > 10) {
+    name = name.substring(0, 10);
+  }
+  return name;
 }
 
 function generateAIBackground(baseType, raceData, tier) {
@@ -849,6 +874,13 @@ function convertAIGeneratedOpponent(data) {
 
     var wpnName = u['主武器名字'] || (unitTier + '阶武器');
     var wpnType = u['主武器类型'] || (baseType === 'archer' ? 'bow' : 'short');
+    // 校验武器类型与兵种匹配：步兵/骑兵只能用近战武器，弓兵只能用远程武器
+    var isRangedWpn = (wpnType === 'bow' || wpnType === 'crossbow');
+    if (baseType === 'infantry' || baseType === 'cavalry') {
+      if (isRangedWpn) wpnType = 'short'; // 步兵/骑兵不能拿远程武器
+    } else if (baseType === 'archer') {
+      if (!isRangedWpn) wpnType = 'bow'; // 弓兵默认用弓
+    }
     var rawWpnDmg = parseInt(u['主武器伤害']);
     var dmgRange = tierDamageRange[tierLevel] || [10, 15];
     var wpnDmg;
@@ -988,10 +1020,11 @@ function convertAIGeneratedOpponent(data) {
       ? getUnitImagePath(unitTier, baseType)
       : 'assets/images/icon_' + unitTier + '_' + typeCfg.iconSuffix + '.png';
 
+    var unitName = trimNameLen(u['名字'] || ('敌方兵团·' + (idx + 1)), 10);
     units.push({
       id: unitId,
       tier: unitTier,
-      name: u['名字'] || ('敌方兵团·' + (idx + 1)),
+      name: unitName,
       race: { id: raceId, name: aiRaceDef.name },
       background: u['背景'] || '来自异次元的神秘军团',
       belief: u['信念'] || '为胜利而战',
@@ -1080,8 +1113,10 @@ function convertAIGeneratedOpponent(data) {
     }
   });
 
+  var factionName = trimNameLen(data.factionName || '未知军团', 10);
+
   return {
-    name: data.factionName || '未知军团',
+    name: factionName,
     tier: globalTier,
     intelligence: intelligence,
     strength: strength,
@@ -1894,6 +1929,16 @@ function buildDuelSidePanel(side, titleText) {
           '<span class="duel-toggle-label">AI</span>' +
         '</div>' +
       '</div>' +
+      // AI 性格选择
+      '<div class="duel-setting-row">' +
+        '<label class="duel-setting-label">AI性格</label>' +
+        '<div class="duel-diff-btns" id="duelPersonalityBtns' + side + '">' +
+          '<button class="duel-diff-btn" data-personality="offensive">进攻型</button>' +
+          '<button class="duel-diff-btn" data-personality="defensive">防守型</button>' +
+          '<button class="duel-diff-btn" data-personality="balanced">均衡型</button>' +
+          '<button class="duel-diff-btn active" data-personality="random">随机</button>' +
+        '</div>' +
+      '</div>' +
       // 生成按钮
       '<div class="duel-setting-row">' +
         '<button class="duel-gen-btn" id="duelGenBtn' + side + '">🔍 生成阵容</button>' +
@@ -1944,6 +1989,15 @@ function bindDuelSideEvents(side) {
       if (label) label.textContent = toggle.classList.contains('on') ? 'AI' : '人类';
     });
   }
+
+  // AI 性格按钮组
+  var persBtns = document.querySelectorAll('#duelPersonalityBtns' + side + ' .duel-diff-btn');
+  persBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      persBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    });
+  });
 
   // 生成阵容按钮
   var genBtn = document.getElementById('duelGenBtn' + side);
@@ -2089,6 +2143,14 @@ function startDuelBattle() {
   }
   // 直接设置 BT 数据并跳转 Battle，跳过 Select 选兵阶段
   // （斗蛐蛐模式下双方单位都来自 AI 生成，不需要从兵营选兵）
+  // 读取 AI 性格设置
+  var persABtn = document.querySelector('#duelPersonalityBtnsA .duel-diff-btn.active');
+  var persBBtn = document.querySelector('#duelPersonalityBtnsB .duel-diff-btn.active');
+  var personalityA = persABtn ? persABtn.dataset.personality : 'random';
+  var personalityB = persBBtn ? persBBtn.dataset.personality : 'random';
+  DUEL_STATE.sideA.personality = personalityA;
+  DUEL_STATE.sideB.personality = personalityB;
+
   window._duelBattleData = {
     sideA: DUEL_STATE.sideA,
     sideB: DUEL_STATE.sideB
@@ -2098,6 +2160,11 @@ function startDuelBattle() {
     TurnState.sideAControlledByAI = !!DUEL_STATE.sideA.controlledByAI;
     TurnState.sideBControlledByAI = !!DUEL_STATE.sideB.controlledByAI;
   }
+  // 设置 AI 难度：斗蛐蛐双方难度可能不同，取较高者作为全局兜底，实际部署/战斗时按侧读取
+  var intelA = DUEL_STATE.sideA.intelligence || 'hard';
+  var intelB = DUEL_STATE.sideB.intelligence || 'hard';
+  var diffOrder = { easy: 0, hard: 1, legend: 2 };
+  window.selectedDifficulty = (diffOrder[intelA] >= diffOrder[intelB]) ? intelA : intelB;
   // 重置对战速度倍率为默认 1.0（避免上局设置残留）
   if (typeof BATTLE_SPEED_MULT !== 'undefined') BATTLE_SPEED_MULT = 1.0;
   // 重置观战模式暂停标记（避免上局残留）
@@ -2167,6 +2234,73 @@ function showDuelBattleSettlement(result) {
   html +=   '</div>';
   html += '</div>';
 
+  // 记分板：双方各棋子的伤害和击杀（存活 + 已溃散归档）
+  var sideA = [], sideB = [];
+  for (var k in placedPieces) {
+    var p = placedPieces[k];
+    if (!p || p._routed) continue;
+    var ud = typeof unitDefByType === 'function' ? unitDefByType(p.unitType) : null;
+    var name = ud ? ud.name : '???';
+    var dmg = p._damageDealt || 0;
+    var kills = p._kills || 0;
+    if (dmg === 0 && kills === 0) continue;
+    var entry = { name: name, dmg: dmg, kills: kills };
+    if (p.team === 'player') sideA.push(entry);
+    else sideB.push(entry);
+  }
+  // 合并已溃散单位的归档数据
+  if (typeof Scoreboard !== 'undefined' && Scoreboard.routedArchive) {
+    Scoreboard.routedArchive.forEach(function(e) {
+      var entry = { name: e.name + '\u2020', dmg: e.dmg, kills: e.kills };
+      if (e.team === 'player') sideA.push(entry);
+      else sideB.push(entry);
+    });
+  }
+  sideA.sort(function(a,b){ return b.dmg - a.dmg; });
+  sideB.sort(function(a,b){ return b.dmg - a.dmg; });
+  var totalDmgA = 0, totalKillA = 0, totalDmgB = 0, totalKillB = 0;
+  sideA.forEach(function(e){ totalDmgA += e.dmg; totalKillA += e.kills; });
+  sideB.forEach(function(e){ totalDmgB += e.dmg; totalKillB += e.kills; });
+
+  if (sideA.length > 0 || sideB.length > 0) {
+    html += '<div style="margin-bottom:20px;text-align:center">';
+    html +=   '<div style="font-size:16px;color:#8a6d4b;font-weight:bold;margin-bottom:12px;letter-spacing:4px">📊 战场贡献榜</div>';
+    html +=   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left">';
+
+    // 甲方
+    html +=     '<div style="background:rgba(107,142,35,0.08);border:1px solid #6b8e23;border-radius:8px;padding:10px">';
+    if (sideA.length === 0) {
+      html +=       '<div style="font-size:12px;color:#999;text-align:center;padding:8px">无数据</div>';
+    } else {
+      html +=       '<table style="width:100%;font-size:12px;color:#3d2b1a;border-collapse:collapse">';
+      html +=         '<tr><td style="width:50%;text-align:left;color:#6b8e23;font-weight:bold;padding:2px 4px">单位</td><td style="width:25%;text-align:right;color:#6b8e23;font-weight:bold;padding:2px 4px">伤害</td><td style="width:25%;text-align:right;color:#6b8e23;font-weight:bold;padding:2px 4px">击杀</td></tr>';
+      sideA.forEach(function(e) {
+        html +=       '<tr><td style="padding:2px 4px">' + escapeHtml(e.name) + '</td><td style="text-align:right;padding:2px 4px">' + e.dmg + '</td><td style="text-align:right;padding:2px 4px">' + e.kills + '</td></tr>';
+      });
+      html +=         '<tr style="border-top:1px solid #6b8e23"><td style="font-weight:bold;padding:4px 4px 2px">合计</td><td style="text-align:right;font-weight:bold;padding:4px 4px 2px">' + totalDmgA + '</td><td style="text-align:right;font-weight:bold;padding:4px 4px 2px">' + totalKillA + '</td></tr>';
+      html +=       '</table>';
+    }
+    html +=     '</div>';
+
+    // 乙方
+    html +=     '<div style="background:rgba(139,37,0,0.06);border:1px solid #8b2500;border-radius:8px;padding:10px">';
+    if (sideB.length === 0) {
+      html +=       '<div style="font-size:12px;color:#999;text-align:center;padding:8px">无数据</div>';
+    } else {
+      html +=       '<table style="width:100%;font-size:12px;color:#3d2b1a;border-collapse:collapse">';
+      html +=         '<tr><td style="width:50%;text-align:left;color:#8b2500;font-weight:bold;padding:2px 4px">单位</td><td style="width:25%;text-align:right;color:#8b2500;font-weight:bold;padding:2px 4px">伤害</td><td style="width:25%;text-align:right;color:#8b2500;font-weight:bold;padding:2px 4px">击杀</td></tr>';
+      sideB.forEach(function(e) {
+        html +=       '<tr><td style="padding:2px 4px">' + escapeHtml(e.name) + '</td><td style="text-align:right;padding:2px 4px">' + e.dmg + '</td><td style="text-align:right;padding:2px 4px">' + e.kills + '</td></tr>';
+      });
+      html +=         '<tr style="border-top:1px solid #8b2500"><td style="font-weight:bold;padding:4px 4px 2px">合计</td><td style="text-align:right;font-weight:bold;padding:4px 4px 2px">' + totalDmgB + '</td><td style="text-align:right;font-weight:bold;padding:4px 4px 2px">' + totalKillB + '</td></tr>';
+      html +=       '</table>';
+    }
+    html +=     '</div>';
+
+    html +=   '</div>';
+    html += '</div>';
+  }
+
   // 结算说明
   html += '<div style="font-size:14px;color:#8a6d4b;margin-bottom:20px">' + escapeHtml(loserName) + ' 全军覆没，' + escapeHtml(winnerName) + ' 赢得本场对决！</div>';
 
@@ -2197,13 +2331,9 @@ function showDuelBattleSettlement(result) {
 function closeDuelSettlementAndReturn() {
   var modal = document.getElementById('duelSettlementModal');
   if (modal) modal.remove();
-  // 清理战斗状态
+  // 清理战斗状态（exitBattle 内部会调用 showPage('Prep') 跳转到准备界面）
   if (typeof exitBattle === 'function') {
     exitBattle();
-  }
-  // 返回斗蛐蛐配置页
-  if (typeof showPage === 'function') {
-    showPage('DuelArena');
   }
 }
 

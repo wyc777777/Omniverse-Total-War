@@ -1,3 +1,4 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== 动画系统 - 算法艺术 + GSAP ====================
 
 // ========== 主菜单粒子背景 · 战后余烬（Aftermath Embers） ==========
@@ -498,6 +499,8 @@ function showToastAnim(toastEl) {
     { opacity: 0, y: -20, scale: 0.9 },
     { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.4)' }
   );
+  // 出现后缓慢向上飘移，避免多个提示互相遮挡
+  gsap.to(toastEl, { y: -30, duration: 1.2, ease: 'none', delay: 0.3 });
 }
 
 // ========== 初始化 ==========
@@ -609,7 +612,7 @@ function showDamageNumber(hex, text, type) {
   if (window.gsap) {
     var offsetX = (Math.random() - 0.5) * 30;
     var riseDist = type === 'crit' ? 80 : 60;
-    var duration = type === 'crit' ? 1.8 : 1.4;
+    var duration = type === 'crit' ? 1.8 : type === 'routed' ? 0.5 : 1.4;
 
     gsap.fromTo(el,
       { opacity: 0, y: 0, scale: 0.4, x: offsetX * 0.3 },
@@ -637,7 +640,7 @@ function showDamageNumber(hex, text, type) {
       onComplete: function() { releaseDmgElement(el); }
     });
   } else {
-    setTimeout(function(){ releaseDmgElement(el); }, 1500);
+    setTimeout(function(){ releaseDmgElement(el); }, type === 'routed' ? 500 : 1500);
   }
 }
 window.showDamageNumber = showDamageNumber;

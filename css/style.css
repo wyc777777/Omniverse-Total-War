@@ -415,7 +415,7 @@ body{
 .bench-slot.empty::after{content:'∅';color:#c4b290;font-size:16px}
 .bench-slot.dragging{opacity:.35}
 .board-column{flex:0 1 auto;display:flex;flex-direction:column;align-items:center}
-.board-wrapper{position:relative;background:#d9c9a8;border:2px solid #b8a080;border-radius:10px;box-shadow:0 0 30px rgba(61,27,0,0.08);overflow:hidden}
+.board-wrapper{position:relative;background:#d9c9a8;border:1px solid #b8a080;border-radius:6px;box-shadow:0 0 12px rgba(61,27,0,0.06);overflow:hidden}
 .board-wrapper.drag-over{outline:2px dashed #8b2500;outline-offset:-2px}
 #boardCanvas{display:block;cursor:pointer}
 .info-panel{width:100%;max-width:1100px;padding:8px 14px;margin-top:6px;display:flex;justify-content:space-between;align-items:center;background:rgba(245,236,215,0.8);border:1px solid #c4b290;border-radius:6px;gap:8px;flex-wrap:wrap}
@@ -3246,11 +3246,11 @@ body.transition-active .ai-opponent-card {
 }
 
 .duel-unit-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
   min-height: 60px;
-  max-height: 280px;
+  max-height: 220px;
   overflow-y: auto;
 }
 .duel-empty-hint {
@@ -3258,12 +3258,13 @@ body.transition-active .ai-opponent-card {
   font-size: 11px;
   color: #8a6d4b;
   padding: 16px 0;
+  grid-column: 1 / -1;
 }
 .duel-unit-card {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
+  gap: 5px;
+  padding: 4px 6px;
   background: rgba(255, 255, 255, 0.7);
   border: 2px solid #c4b290;
   border-radius: 8px;
@@ -3271,8 +3272,8 @@ body.transition-active .ai-opponent-card {
 .duel-unit-img-wrap {
   position: relative;
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
 }
 .duel-unit-img {
   width: 100%;
@@ -3295,7 +3296,7 @@ body.transition-active .ai-opponent-card {
   min-width: 0;
 }
 .duel-unit-name {
-  font-size: 12px;
+  font-size: 11px;
   color: #3d1a00;
   font-weight: bold;
   white-space: nowrap;
@@ -3303,7 +3304,7 @@ body.transition-active .ai-opponent-card {
   text-overflow: ellipsis;
 }
 .duel-unit-type {
-  font-size: 11px;
+  font-size: 10px;
   color: #8a6d4b;
   margin-top: 1px;
 }
@@ -3325,6 +3326,150 @@ body.transition-active .ai-opponent-card {
 .spectator-pause-btn:hover {
   background: rgba(107, 76, 42, 0.85);
   color: #fff;
+}
+
+/* ===== 斗蛐蛐记分板 ===== */
+.scoreboard {
+  display: none;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin: 6px auto 0;
+  width: fit-content;
+  max-width: 95%;
+  background: rgba(40, 28, 16, 0.88);
+  border: 1px solid #6b4c2a;
+  border-radius: 8px;
+  font-size: 12px;
+}
+.sb-side {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 160px;
+  max-width: 240px;
+}
+.sb-header {
+  font-weight: bold;
+  font-size: 13px;
+  text-align: center;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #6b4c2a;
+}
+.sb-left .sb-header { color: #6b8e23; }
+.sb-right .sb-header { color: #8b2500; }
+.sb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.sb-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(212, 184, 150, 0.06);
+}
+.sb-name {
+  flex: 1;
+  color: #d4b896;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sb-num {
+  color: #f0d080;
+  font-weight: bold;
+  font-size: 12px;
+  min-width: 28px;
+  text-align: right;
+}
+.sb-empty {
+  color: #6b4c2a;
+  text-align: center;
+  font-size: 11px;
+  padding: 4px;
+}
+.sb-total {
+  font-size: 11px;
+  color: #d4b896;
+  text-align: center;
+  padding-top: 2px;
+  border-top: 1px solid #6b4c2a;
+}
+.sb-total b {
+  color: #f0d080;
+  font-weight: bold;
+}
+.sb-vs {
+  color: #d4a017;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: SimSun, serif;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+}
+/* 内联计分板（替换备战席位置） */
+.sb-side-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  background: rgba(40, 28, 16, 0.88);
+  border: 1px solid #6b4c2a;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.sb-side-inline .sb-header {
+  font-size: 12px;
+}
+.sb-side-inline .sb-list {
+  max-height: 300px;
+}
+.sb-side-inline .sb-row {
+  font-size: 10px;
+}
+.sb-side-inline .sb-name {
+  font-size: 10px;
+}
+/* 战斗阶段下 bench-column 加宽以容纳计分板 */
+.bench-column.battle-mode {
+  width: 175px;
+}
+/* 作战信息日志 */
+.combat-log {
+  width: 100%;
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  font-size: 10px;
+  margin-top: 4px;
+}
+.combat-log .cl-entry {
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: rgba(40, 28, 16, 0.7);
+  color: #d4b896;
+  line-height: 1.3;
+  word-break: break-all;
+  animation: clFadeIn 0.4s ease;
+}
+.combat-log .cl-entry.cl-attack { border-left: 2px solid #8b6914; }
+.combat-log .cl-entry.cl-ambush { border-left: 2px solid #8b2500; color: #f0a070; }
+.combat-log .cl-entry.cl-kill { border-left: 2px solid #c44a2a; color: #ff8866; font-weight: bold; }
+@keyframes clFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .duel-vs {
@@ -3450,4 +3595,14 @@ body.transition-active .ai-opponent-card {
   color: #fff;
   border-color: #8b6914;
   font-weight: bold;
+}
+
+/* 速度切换提示动画 */
+.speed-hint {
+  animation: fadeOut 1s ease-out forwards;
+}
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
 }

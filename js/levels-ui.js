@@ -1,3 +1,4 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== 关卡选择界面 ====================
 // 配合 assets/data/level_config.json（window.LC）与 save-manager 的 isLevelCompleted/markLevelCompleted
 

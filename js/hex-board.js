@@ -1,3 +1,4 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== 棋盘引擎 ====================
 const RADIUS=5,HS=46,SQRT3=Math.sqrt(3),PAD=70;
 const hexes=(function(){var h=[];for(var q=-RADIUS;q<=RADIUS;q++)for(var r=-RADIUS;r<=RADIUS;r++){var s=-q-r;if(Math.abs(s)<=RADIUS)h.push({q:q,r:r,s:s})}return h})();
@@ -24,7 +25,7 @@ function buildBackgroundCache(){
     var rT=Math.round(165+30*(1-d/RADIUS)),gT=Math.round(145+25*(1-d/RADIUS)),bT=Math.round(115+20*(1-d/RADIUS));
     var fill,stroke,sw;
     if(d===0){fill='rgba(180,160,110,0.5)';stroke='#8b6914';sw=2}
-    else if((h.q===0||h.r===0||h.s===0)&&typeof TurnState!=='undefined'&&TurnState.phase==='deploy'){fill='rgba(200,150,130,0.45)';stroke='rgba(180,80,40,0.4)';sw=1}
+    else if(d<=1&&typeof TurnState!=='undefined'&&TurnState.phase==='deploy'){fill='rgba(200,150,130,0.45)';stroke='rgba(180,80,40,0.4)';sw=1}
     else{fill='rgba('+rT+','+gT+','+bT+',0.7)';stroke='#c4b290';sw=1}
     _bgCtx.fillStyle=fill;_bgCtx.fill();
     _bgCtx.strokeStyle=stroke;_bgCtx.lineWidth=sw;_bgCtx.stroke();
@@ -523,26 +524,56 @@ function drawHex(h,hl){
   var isAnimating=hasP&&placedPieces[key]._animating;
   var isRouted=hasP&&placedPieces[key]._routed;
   var isAxis=(h.q===0||h.r===0||h.s===0)&&!hasP;
+
+  // ===== 地形渲染 =====
+  var terrainType = (typeof getTerrainType === 'function') ? getTerrainType(h) : null;
+  if (terrainType) {
+    if (terrainType === 'lake') {
+      // 湖泊：水的颜色，白字标注"湖泊"
+      ctx.fillStyle = 'rgba(60,140,220,0.85)';
+      ctx.fill();
+      ctx.strokeStyle = '#2a6bb5';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // 绘制"湖泊"文字
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('湖泊', cx, cy);
+      return; // 地形格不画棋子
+    } else if (terrainType === 'mountain') {
+      // 山脉：深土棕色，标注"山脉"
+      ctx.fillStyle = 'rgba(120,90,50,0.85)';
+      ctx.fill();
+      ctx.strokeStyle = '#6b4e2a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // 绘制"山脉"文字
+      ctx.fillStyle = '#f0e6d0';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('山脉', cx, cy);
+      return; // 地形格不画棋子
+    }
+  }
+
   var rT=Math.round(165+30*(1-d/RADIUS)),gT=Math.round(145+25*(1-d/RADIUS)),bT=Math.round(115+20*(1-d/RADIUS));
   var fill,stroke,sw;
-  if(isRouted){fill='rgba(100,100,100,0.35)';stroke='#555';sw=1}
-  else if(isAnimating){fill='rgba('+rT+','+gT+','+bT+',0.7)';stroke='#b8a080';sw=1.2}
+  if(isAnimating){fill='rgba('+rT+','+gT+','+bT+',0.7)';stroke='#b8a080';sw=1.2}
   else if(hl==='sp'){fill='rgba(180,160,120,0.7)';stroke='#8b6914';sw=3}
   else if(hl==='mv'){fill='rgba(160,190,140,0.55)';stroke='#6b8e23';sw=2.2}
   else if(hl==='atk'){fill='rgba(190,140,130,0.5)';stroke='#cc3333';sw=2}
   else if(hasP){fill='rgba('+rT+','+gT+','+bT+',0.7)';stroke='#b8a080';sw=1.2}
   else if(d===0){fill='rgba(180,160,110,0.5)';stroke='#8b6914';sw=2}
   else if(hl==='hv'){fill='rgba(180,145,100,0.5)';stroke='#6b8e23';sw=2}
-  else if(isAxis&&TurnState.phase==='deploy'){fill='rgba(200,150,130,0.45)';stroke='rgba(180,80,40,0.4)';sw=1}
+  else if(d<=1&&TurnState.phase==='deploy'){fill='rgba(200,150,130,0.45)';stroke='rgba(180,80,40,0.4)';sw=1}
   else{fill='rgba('+rT+','+gT+','+bT+',0.7)';stroke='#c4b290';sw=1}
   ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=sw;ctx.stroke();
   if(hasP){
     if(isAnimating){
       // 正在动画中：不在此格绘制棋子，稍后由 drawAnimatingPiecesOnCanvas 绘制
-    }else if(isRouted){
-      ctx.fillStyle='rgba(255,255,255,0.5)';ctx.fill();ctx.fillStyle='#888';
-      ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillText('溃逃',cx,cy);
     }else{
       // 行动完毕灰化效果
       var done = placedPieces[key]._actionUsedThisTurn && placedPieces[key]._attackedThisTick;
@@ -595,10 +626,10 @@ function drawHex(h,hl){
         var nameText = udef.name;
         if(nameText.length > 6) nameText = nameText.substring(0, 5) + '..';
         var nameY = cy - HS * 0.62;
-        ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
         var nameW = ctx.measureText(nameText).width;
         ctx.fillStyle='rgba(0,0,0,0.65)';
-        ctx.fillRect(cx - nameW/2 - 4, nameY - 6, nameW + 8, 12);
+        ctx.fillRect(cx - nameW/2 - 4, nameY - 7, nameW + 8, 14);
         ctx.fillStyle=placedPieces[key].team==='player' ? '#c8e6a0' : '#f0b8a0';
         ctx.fillText(nameText, cx, nameY);
       }
@@ -683,7 +714,7 @@ function render(){
     var atkRange=st&&st.mainWeapon?st.mainWeapon.allowedRange:1;
     hexes.forEach(function(h){
       var key=h.q+','+h.r+','+h.s;
-      if(hDist(h,sh)<=range&&!placedPieces[key])mv.add(key);
+      if(hDist(h,sh)<=range&&!placedPieces[key]&&!(typeof isTerrainBlocked==='function'&&isTerrainBlocked(h)))mv.add(key);
       if(TurnState.phase==='battle'&&hDist(h,sh)<=atkRange&&hDist(h,sh)>=1&&placedPieces[key]&&placedPieces[key].team!==sp.team&&!placedPieces[key]._routed)atk.add(key);
     })
   }

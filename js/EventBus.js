@@ -1,8 +1,9 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== EventBus 事件总线 ====================
 
 /**
  * @fileoverview 事件总线模块 - 提供统一的事件订阅与发布机制
- * @module js/core/EventBus
+ * @module js/EventBus
  * @description 使用单例模式实现的事件总线，支持事件的注册、注销、触发和一次性监听
  * @example
  * // 注册事件监听

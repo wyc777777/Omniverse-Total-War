@@ -1,3 +1,4 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // Fallback 配置数据
 // 当 assets/data/*.json 加载失败时使用此处的硬编码数据
 // 注意：P1-D14 已补全 W010/W013/W014 武器 ID，请勿丢失

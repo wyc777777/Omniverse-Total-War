@@ -1,10 +1,11 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== EquipmentService 装备服务 ====================
 
 /**
  * @file 装备服务模块 - 提供装备与背包操作的统一接口
  * @description 封装装备与背包操作的核心逻辑，通过 EventBus 发布变更事件，
  *              保持向后兼容，全局函数委托到此服务。
- * @module js/core/EquipmentService
+ * @module js/EquipmentService
  */
 
 /**

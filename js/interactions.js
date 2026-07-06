@@ -1,3 +1,4 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== 交互系统 v2 ====================
 var interactionInited = false;
 var _listenersAttached = false;
@@ -43,7 +44,15 @@ function initInteractions() {
       // 仅当前部署方（且非 AI 控制）的棋子可放置
       if (d.team !== TurnState.currentPlayer) return;
       if (isControlledByAI(TurnState.currentPlayer)) return;
-      if (h.q === 0 || h.r === 0 || h.s === 0) return;
+      // 中心一环以内禁止放置
+      if (hDist(h, {q:0,r:0,s:0}) <= 1) return;
+      // 不允许在敌人 2 格范围内放置
+      for (var pk in placedPieces) {
+        if (placedPieces[pk].team !== d.team && hDist(placedPieces[pk].hex, h) <= 2) {
+          if (typeof showToast === 'function') showToast('不能在敌人 2 格范围内放置！', 'warning');
+          return;
+        }
+      }
     }
     if (TurnState.phase === 'battle') return;
 
@@ -67,11 +76,36 @@ function initInteractions() {
   // ===== 点击 =====
   var lcT = 0, lcK = '';
   _clickHandler = function(e) {
-    // 双 AI 观战模式：不允许任何手动操作
-    if (TurnState.isDuelBattle && isControlledByAI('player') && isControlledByAI('enemy')) return;
     var rect = canvas.getBoundingClientRect(), h = pix2hex((e.clientX - rect.left) * canvas.width / rect.width, (e.clientY - rect.top) * canvas.height / rect.height);
     if (!h) { deselectAll(); requestRender(); return; }
     var key = h.q + ',' + h.r + ',' + h.s, now = Date.now(), dbl = (key === lcK && now - lcT < 350); lcT = now; lcK = key;
+
+    // === 斗蛐蛐模式：玩家始终为观战者，仅暂停时可点击棋子查看面板 ===
+    if (TurnState.isDuelBattle) {
+      if (!_spectatorPaused) return;
+      if (placedPieces[key] && !placedPieces[key]._routed) {
+        var tp = placedPieces[key];
+        selectedPieceKey = key;
+        updateUnitCard(tp);
+        updateMoveHint();
+        if (tp.team === 'player' && typeof startSelectAnim === 'function') startSelectAnim(key);
+        requestRender();
+      } else {
+        deselectAll();
+        requestRender();
+      }
+      return;
+    }
+
+    // === 任意时刻点击棋子查看面板（不改变选中状态，选中由后面的「选中棋子」逻辑处理）===
+    if (placedPieces[key] && !placedPieces[key]._routed) {
+      var tp2 = placedPieces[key];
+      updateUnitCard(tp2);
+      updateMoveHint();
+      requestRender();
+      if (TurnState.phase === 'battle' && TurnState.currentPlayer !== 'player') return;
+      if (TurnState.phase === 'deploy') return;
+    }
 
     // === 战斗模式 ===
     if (TurnState.phase === 'battle' && TurnState.currentPlayer === 'player') {
@@ -128,7 +162,7 @@ function initInteractions() {
         if (sp2._actionUsedThisTurn) { deselectAll(); requestRender(); return; }
       }
       var sh2 = sp2.hex, ud2 = unitDefByType(sp2.unitType), st2 = ud2 ? computeStats(ud2) : null, r2 = st2 ? st2.movement : 1;
-      if (hDist(h, sh2) <= r2) {
+      if (hDist(h, sh2) <= r2 && !(typeof isTerrainBlocked === 'function' && isTerrainBlocked(h))) {
         // 追击检查：离开前看是否有敌方近战在附近
         if (typeof tryOpportunityAttack === 'function') {
           tryOpportunityAttack(selectedPieceKey);

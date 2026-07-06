@@ -1,3 +1,5 @@
+// AI路径引导：如需查找相关代码路径，请先查阅 AI_PATH_GUIDE.md
+// 每新增/修改一个文件后必须同步更新 AI_PATH_GUIDE.md
 // ==================== 兵营事件监听初始化 ====================
 (function() {
   var _barracksRefreshTimer = null;
@@ -224,8 +226,10 @@ function updateUnitCard(piece) {
   var cd = document.getElementById('unitCard');
   if (!cd) return;
   if (!piece) { cd.classList.remove('show'); return; }
-  var ud = unitDefByType(piece.unitType); if (!ud) { cd.classList.remove('show'); return; }
-  var st = computeStats(ud); if (!st) { cd.classList.remove('show'); return; }
+  var ud = unitDefByType(piece.unitType);
+  if (!ud) { cd.classList.remove('show'); return; }
+  var st = computeStats(ud);
+  if (!st) { cd.classList.remove('show'); return; }
   var imgEl = document.getElementById('unitCardImg');
   var nameEl = document.getElementById('unitCardName');
   var bdEl = document.getElementById('unitCardBreakdown');

@@ -1,3 +1,5 @@
+// AI路径引导：如需查找相关代码路径，请先查阅 AI_PATH_GUIDE.md
+// 每新增/修改一个文件后必须同步更新 AI_PATH_GUIDE.md
 // ==================== 召唤页面UI ====================
 
 function buildSummonPage() {

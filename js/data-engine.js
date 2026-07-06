@@ -1,3 +1,4 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== 数据引擎 ====================
 let RD=null, ED=null, UD=null, BT=null, UI={};
 
@@ -260,7 +261,8 @@ function computeStatsWithRace(unitDef, r) {
   if (isFlying) {
     moveCap = tierVal >= 3 ? 4 : Math.max(3, tierVal + 1);
   } else if (isCavalry) {
-    moveCap = tierVal >= 3 ? 4 : Math.max(2, tierVal + 1);
+    // 骑兵移动上限：钻石3格，黄金及以下2格
+    moveCap = tierVal >= 4 ? 3 : 2;
   } else {
     moveCap = Math.max(1, r.baseMovement || 1);
   }

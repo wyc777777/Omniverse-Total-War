@@ -1,3 +1,5 @@
+// AI路径引导：如需查找相关代码路径，请先查阅 AI_PATH_GUIDE.md
+// 每新增/修改一个文件后必须同步更新 AI_PATH_GUIDE.md
 // ===== UI 工具函数（统一实现）=====
 // 提供 showToast、escapeHtml、escapeAttr 等通用 UI 工具函数
 // 必须在所有业务脚本之前加载
@@ -42,7 +44,7 @@ function showToast(msg, type) {
   toastTimer = setTimeout(function() {
     toast.style.opacity = '0';
     setTimeout(function() { toast.remove(); }, 300);
-  }, 2500);
+  }, 1500);
 }
 
 // ===== HTML 转义函数 =====

@@ -1,3 +1,4 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== 交战引擎 ====================
 // 阶段0-4完整战斗解析，基于《万界全面战争战场策划案》
 
@@ -93,7 +94,7 @@ function executeCombat(atkKey, defKey) {
 
   // ==== 阶段2：战术判定 ====
 
-  // 冲锋动能（按移动距离分档：1.3 / 1.5 / 1.7 / 2.0）
+  // 冲锋动能（按移动距离分档：1.2 / 1.4 / 1.6）
   // 注：这里的格数指骑兵/空军移动后发起攻击的实际移动距离
   // 召唤单位 type 为 'cavalry_U123'，需用 baseType 判定
   var atkBaseType = atkUD.baseType || atkUD.type;
@@ -104,10 +105,10 @@ function executeCombat(atkKey, defKey) {
   if (isCharger) {
     var chargeDist0 = (typeof atkPiece._chargeDistance === 'number' && atkPiece._chargeDistance > 0) ? atkPiece._chargeDistance : 0;
     var moveDist = Math.min(chargeDist0, 4);
-    if (moveDist >= 4) momentum = 2.0;
-    else if (moveDist >= 3) momentum = 1.7;
-    else if (moveDist >= 2) momentum = 1.5;
-    else if (moveDist >= 1) momentum = 1.3;
+    if (moveDist >= 4) momentum = 1.6;
+    else if (moveDist >= 3) momentum = 1.6;
+    else if (moveDist >= 2) momentum = 1.4;
+    else if (moveDist >= 1) momentum = 1.2;
     var chargeLabel = atkBaseType === 'flying' ? '空军俯冲' : '骑兵冲锋';
     if (momentum > 1.01) addWarReportLine('[动能] ' + atkUD.name + ' ' + chargeLabel + moveDist + '格，动能倍率 ×' + momentum.toFixed(1));
   }
@@ -202,6 +203,13 @@ function executeCombat(atkKey, defKey) {
 
   // 单轮伤害 = 基础伤害 × 攻击范围(打多少规模) × 参与人数 × 动能 × 骑兵方位加成 × 弩手重甲克制
   var finalDmg = Math.round(rawDmg * atkRangeVal * atkLimit * momentum * dirCavalryBonus * crossbowBonus);
+  // 后手方第一回合减伤 30%
+  if (typeof TurnState !== 'undefined' && TurnState.currentRound === 1 && TurnState.secondPlayer === defPiece.team) {
+    var beforeReduction = finalDmg;
+    finalDmg = Math.round(finalDmg * 0.7);
+    if (finalDmg < 1) finalDmg = 1;
+    addWarReportLine('[后手减伤] ' + defUD.name + ' 第一回合获得30%减伤，' + beforeReduction + ' → ' + finalDmg);
+  }
   // 长柄抵御冲锋：额外追加反骑伤害（基础伤害 × 1.5，不参与方位/弩手二次放大）
   if (antiCavExtra) {
     var antiCavDmg = Math.round(rawDmg * atkRangeVal * atkLimit * 1.5);
@@ -239,6 +247,11 @@ function executeCombat(atkKey, defKey) {
 
   addWarReportLine('[战损] ' + defUD.name + ' 损失 <b>' + lostMen + '</b> 人，剩余' + defSt.unitCount + '人/' + defSt.totalHP + '血量');
 
+  // 作战日志推送
+  if (typeof addCombatLog === 'function') {
+    addCombatLog(atkPiece.team, escapeHtml(atkUD.name) + ' 攻击 ' + escapeHtml(defUD.name) + ' 造成 <b>' + finalDmg + '</b> 伤害', 'attack');
+  }
+
   // ==== 阶段4：战损与崩溃 ====
   var hpRatio = defPiece._initialHP ? defSt.totalHP / defPiece._initialHP : 1;
   if (hpRatio <= 0.25) { defSt.morale -= 25; addWarReportLine('[战损] 血量降至25%以下，士气-25'); }
@@ -265,17 +278,43 @@ function executeCombat(atkKey, defKey) {
   if (defRouted) defPiece._routed = true;
   if (defPiece._currentHP <= 0 || defPiece._currentCount <= 0) defPiece._routed = true;
 
-  // 击杀鼓舞士气（方案B）：击溃敌军后，视距5格内友军+5士气
+  // ===== 记分板：记录伤害和击杀 =====
+  if (typeof recordScoreboardDamage === 'function') {
+    recordScoreboardDamage(atkKey, finalDmg);
+  }
+  if (defPiece._routed && typeof recordScoreboardKill === 'function') {
+    recordScoreboardKill(atkKey);
+  }
+
+  // 击杀士气恢复：击杀者自身按血量百分比恢复士气（三选一互斥）+ 2格内友军+3
   if (defPiece._routed) {
+    // 计算攻击方血量百分比
+    var atkHPRatio = 1.0;
+    if (atkPiece._initialHP && atkPiece._initialHP > 0) {
+      atkHPRatio = (atkPiece._currentHP || 0) / atkPiece._initialHP;
+    }
+    // 击杀者自身士气恢复（三选一互斥）
+    var selfMoraleGain = 5;
+    var moraleLabel = '';
+    if (atkHPRatio < 0.25) {
+      selfMoraleGain = 15;
+      moraleLabel = '绝地反击';
+    } else if (atkHPRatio < 0.50) {
+      selfMoraleGain = 10;
+      moraleLabel = '破釜沉舟';
+    }
+    if (selfMoraleGain > 0 && atkPiece._currentMorale !== undefined) {
+      atkPiece._currentMorale = Math.min(100, atkPiece._currentMorale + selfMoraleGain);
+      if (moraleLabel) {
+        addWarReportLine('[士气] ' + atkUD.name + ' 触发"' + moraleLabel + '"，自身士气+' + selfMoraleGain);
+      }
+    }
+    // 友军鼓舞：击杀者2格内友军 +3士气
     Object.keys(placedPieces).forEach(function(k) {
       var p = placedPieces[k];
       if (p.team === atkPiece.team && !p._routed && p !== atkPiece) {
-        if (hDist(p.hex, defPiece.hex) <= 5) {
-          var oldMorale = p._currentMorale;
-          p._currentMorale = Math.min(100, (p._currentMorale || 0) + 5);
-          if (p._currentMorale > oldMorale && typeof addFloatingText === 'function') {
-            // 可选：飘字显示士气恢复
-          }
+        if (hDist(p.hex, atkPiece.hex) <= 2) {
+          p._currentMorale = Math.min(100, (p._currentMorale || 0) + 3);
         }
       }
     });
@@ -306,8 +345,15 @@ function executeCombat(atkKey, defKey) {
 
   // 清理溃逃棋子
   if (defPiece._routed) {
+    if (typeof archiveRoutedPiece === 'function') archiveRoutedPiece(defKey);
     delete placedPieces[defKey];
     addWarReportLine('[消灭] ' + defUD.name + ' 已被击溃，从棋盘移除！');
+    // 显示击杀漂浮提示
+    if (typeof showKillNotify === 'function') showKillNotify(atkUD.name, defUD.name);
+    // 作战日志：击溃
+    if (typeof addCombatLog === 'function') {
+      addCombatLog(atkPiece.team, escapeHtml(atkUD.name) + ' 击溃了 ' + escapeHtml(defUD.name), 'kill');
+    }
   }
 
   requestRender();
@@ -361,10 +407,10 @@ function computeCombatPreview(atkPiece, defPiece) {
   if (isCharger) {
     var chargeDist1 = (typeof atkPiece._chargeDistance === 'number' && atkPiece._chargeDistance > 0) ? atkPiece._chargeDistance : 0;
     var moveDist = Math.min(chargeDist1, 4);
-    if (moveDist >= 4) momentum = 2.0;
-    else if (moveDist >= 3) momentum = 1.7;
-    else if (moveDist >= 2) momentum = 1.5;
-    else if (moveDist >= 1) momentum = 1.3;
+    if (moveDist >= 4) momentum = 1.6;
+    else if (moveDist >= 3) momentum = 1.6;
+    else if (moveDist >= 2) momentum = 1.4;
+    else if (moveDist >= 1) momentum = 1.2;
   }
 
   if (isCharger && defSt.mainWeapon && defSt.mainWeapon.type === 'long' && hasEffect(defSt.mainWeapon.effects, 'E001')) {
@@ -414,6 +460,11 @@ function computeCombatPreview(atkPiece, defPiece) {
   }
 
   var finalDmg = Math.round(rawDmg * atkRangeVal * atkLimit * momentum * dirCavalryBonus * crossbowBonus);
+  // 后手方第一回合减伤 30%
+  if (typeof TurnState !== 'undefined' && TurnState.currentRound === 1 && TurnState.secondPlayer === defPiece.team) {
+    finalDmg = Math.round(finalDmg * 0.7);
+    if (finalDmg < 1) finalDmg = 1;
+  }
   if (antiCavExtra) {
     finalDmg += Math.round(rawDmg * atkRangeVal * atkLimit * 1.5);
   }
@@ -427,9 +478,9 @@ function computeCombatPreview(atkPiece, defPiece) {
   var remainingHP = Math.max(0, (defSt.unitCount - lostMen) * hpPerUnitSafe - (totalDieDamage % hpPerUnitSafe));
   var hpRatio = defPiece._initialHP ? remainingHP / defPiece._initialHP : 1;
   var moraleAfter = defSt.morale;
-  if (hpRatio <= 0.25) moraleAfter -= 25;
-  else if (hpRatio <= 0.5) moraleAfter -= 15;
-  else if (hpRatio <= 0.75) moraleAfter -= 10;
+  if (hpRatio <= 0.25) moraleAfter -= 12;
+  else if (hpRatio <= 0.5) moraleAfter -= 10;
+  else if (hpRatio <= 0.75) moraleAfter -= 8;
 
   var isNeverRout = defUD && defUD._neverRout;
   var willRout = (moraleAfter <= 0 && defSt.race.baseMorale !== 100 && !isNeverRout) || remainingHP <= 0;
@@ -470,6 +521,12 @@ function generateWarReport(atkUD, defUD, atkSt, defSt, lostMen, routed) {
 }
 
 function showWarReport(report) {
+  // AI对战 / 斗蛐蛐模式下不显示战报，改为点击部队查看面板属性
+  if (typeof TurnState !== 'undefined' && (TurnState.isAIBattle || TurnState.isDuelBattle)) {
+    var panel = document.getElementById('warReport');
+    if (panel) panel.style.display = 'none';
+    return;
+  }
   var el = document.getElementById('warReportContent');
   if (el) el.innerHTML = report;
   var panel = document.getElementById('warReport');
@@ -501,7 +558,7 @@ function tryOpportunityAttack(movingPieceKey) {
     var pUd = unitDefByType(p.unitType);
     if (!pUd) return;
     var pBase = pUd.baseType || 'infantry';
-    if (pBase === 'archer') return; // 远程不能追击
+    if (pBase !== 'infantry') return; // 仅近战步兵可偷袭
     if (!pUd.type) return;
     potentialAttackers.push({ key: k, piece: p, type: pUd.type });
   });
@@ -512,7 +569,7 @@ function tryOpportunityAttack(movingPieceKey) {
   var attacker = potentialAttackers[Math.floor(Math.random() * potentialAttackers.length)];
 
   // 根据追击者的品阶计算触发概率
-  var tierRates = { iron: 0.10, bronze: 0.20, gold: 0.30, diamond: 0.40 };
+  var tierRates = { iron: 0.20, bronze: 0.40, gold: 0.60, diamond: 0.80 };
   var tier = 'iron';
   if (typeof UNIT_TIER_CONFIG !== 'undefined' && UNIT_TIER_CONFIG[attacker.type]) {
     tier = UNIT_TIER_CONFIG[attacker.type].tier || 'iron';
@@ -566,8 +623,8 @@ function executeOpportunityAttack(atkKey, defKey) {
   var fullDamage = rawDmg * atkRangeVal * atkCount;
   if (isNaN(fullDamage) || fullDamage < 1) fullDamage = 1;
 
-  // 偷袭伤害 = 一次攻击 × 0.6
-  var finalDamage = Math.round(fullDamage * 0.6);
+  // 偷袭伤害 = 一次攻击（全额，无衰减）
+  var finalDamage = Math.round(fullDamage * 1.0);
   if (isNaN(finalDamage) || finalDamage < 1) finalDamage = 1;
 
   // ===== 应用伤害到 A（被偷袭者）=====
@@ -604,6 +661,11 @@ function executeOpportunityAttack(atkKey, defKey) {
   }
   showToast('⚡ 偷袭！' + (tierLabel ? tierLabel + ' ' : '') + atkName + ' 对移动中的部队发动突袭！', 'warning');
 
+  // 作战日志：偷袭
+  if (typeof addCombatLog === 'function' && atkPiece) {
+    addCombatLog(atkPiece.team, '⚡ ' + escapeHtml(atkUD.name) + ' 偷袭 ' + escapeHtml(defUD.name) + ' 造成 <b>' + finalDamage + '</b> 伤害', 'ambush');
+  }
+
   if (typeof showDamageNumber === 'function') {
     showDamageNumber(defPiece.hex, '偷袭', 'crit');
     showDamageNumber(defPiece.hex, '-' + finalDamage, 'normal');
@@ -620,10 +682,24 @@ function executeOpportunityAttack(atkKey, defKey) {
     if (defPiece._statuses && defPiece._statuses.length) {
       defPiece._statuses = [];
     }
+    if (typeof archiveRoutedPiece === 'function') archiveRoutedPiece(defKey);
     delete placedPieces[defKey];
     if (typeof showDamageNumber === 'function') {
       showDamageNumber(defPiece.hex, '溃逃', 'routed');
     }
+    // 偷袭击溃日志和漂浮提示
+    if (typeof showKillNotify === 'function') showKillNotify(atkUD.name, defUD.name);
+    if (typeof addCombatLog === 'function' && atkPiece) {
+      addCombatLog(atkPiece.team, escapeHtml(atkUD.name) + ' 击溃了 ' + escapeHtml(defUD.name), 'kill');
+    }
+  }
+
+  // ===== 记分板：记录伤害和击杀 =====
+  if (typeof recordScoreboardDamage === 'function') {
+    recordScoreboardDamage(atkKey, finalDamage);
+  }
+  if (defPiece._routed && typeof recordScoreboardKill === 'function') {
+    recordScoreboardKill(atkKey);
   }
 
   requestRender();

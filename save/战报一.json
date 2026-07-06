@@ -5,36 +5,36 @@
     {
       "type": "peasant_archer",
       "name": "农民弓兵团",
-      "id": "u_1782956186903_12251_init_0"
+      "id": "u_1783317832155_55418_init_0"
     },
     {
       "type": "cavalry",
       "name": "暴风骑兵团",
-      "id": "u_1782956186903_12251_init_1"
+      "id": "u_1783317832155_55418_init_1"
     },
     {
       "type": "elite_archer",
       "name": "精锐弩兵兵团",
-      "id": "u_1782956186903_12251_init_2"
+      "id": "u_1783317832155_55418_init_2"
     },
     {
       "type": "beast_infantry",
       "name": "战犬侦查营",
-      "id": "u_1782956186903_12251_init_3"
+      "id": "u_1783317832155_55418_init_3"
     },
     {
       "type": "infantry",
       "name": "磐石重步兵团",
-      "id": "u_1782956186903_12251_init_4"
+      "id": "u_1783317832155_55418_init_4"
     },
     {
       "type": "flying",
       "name": "雷霆狮鹫空军兵团",
-      "id": "u_1782956186903_12251_init_5"
+      "id": "u_1783317832155_55418_init_5"
     }
   ],
   "points": 1000,
-  "timestamp": "2026-07-02T01:36:44.349Z",
+  "timestamp": "2026-07-06T06:12:25.294Z",
   "inventory": {
     "weapons": [],
     "shields": [],
@@ -45,5 +45,5 @@
   "summonModel": "deepseek-v4-flash",
   "completedLevels": {},
   "name": "战报一",
-  "_serverSavedAt": "2026-07-02T01:36:44.363Z"
+  "_serverSavedAt": "2026-07-06T06:12:25.307Z"
 }

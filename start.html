@@ -198,17 +198,25 @@
   <div class="battle-top-bar">
     <div class="battle-speed-controls" id="battleSpeedControls" style="display:none;">
       <span class="speed-label">速度</span>
-      <button class="speed-btn" data-speed="0.5">0.5x</button>
       <button class="speed-btn active" data-speed="1">1x</button>
       <button class="speed-btn" data-speed="2">2x</button>
-      <button class="speed-btn" data-speed="5">5x</button>
+      <button class="speed-btn" data-speed="3">3x</button>
     </div>
     <button class="spectator-pause-btn" id="spectatorPauseBtn" style="display:none;">⏸ 暂停观战</button>
     <div class="turn-panel turn-panel-top" id="turnStatus" style="display:none"></div>
     <div id="turnNotify" class="turn-notify" style="display:none"></div>
   </div>
   <div class="game-layout">
-    <div class="bench-column"><div class="bench-title">🔷 我方</div><div id="benchLeft"></div></div>
+    <div class="bench-column" id="benchColLeft">
+      <div class="bench-title" id="benchTitleLeft">🔷 我方</div>
+      <div id="benchLeft"></div>
+      <div class="sb-side-inline" id="sbInlineA" style="display:none;">
+        <div class="sb-header" id="sbHeaderA">甲方</div>
+        <div class="sb-list" id="sbListA"><div class="sb-empty">暂无数据</div></div>
+        <div class="sb-total">伤害 <b id="sbDmgA">0</b> · 击杀 <b id="sbKillA">0</b></div>
+      </div>
+      <div class="combat-log" id="combatLogA" style="display:none;"></div>
+    </div>
     <div class="board-column">
       <div class="board-wrapper" id="boardDropZone" style="position:relative">
         <canvas id="boardCanvas"></canvas>
@@ -231,7 +239,16 @@
         </div>
       </div>
     </div>
-    <div class="bench-column"><div class="bench-title">🔶 敌方</div><div id="benchRight"></div></div>
+    <div class="bench-column" id="benchColRight">
+      <div class="bench-title" id="benchTitleRight">🔶 敌方</div>
+      <div id="benchRight"></div>
+      <div class="sb-side-inline" id="sbInlineB" style="display:none;">
+        <div class="sb-header" id="sbHeaderB">乙方</div>
+        <div class="sb-list" id="sbListB"><div class="sb-empty">暂无数据</div></div>
+        <div class="sb-total">伤害 <b id="sbDmgB">0</b> · 击杀 <b id="sbKillB">0</b></div>
+      </div>
+      <div class="combat-log" id="combatLogB" style="display:none;"></div>
+    </div>
   </div>
   <div class="info-panel">
     <div class="info-left">
@@ -261,12 +278,12 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <!-- 核心模块 -->
-<script src="js/core/EventBus.js"></script>
+<script src="js/EventBus.js"></script>
 <!-- 服务层 -->
-<script src="js/core/EquipmentService.js"></script>
-<script src="js/core/BattleService.js"></script>
+<script src="js/EquipmentService.js"></script>
+<script src="js/BattleService.js"></script>
 <!-- UI层 -->
-<script src="js/core/PanelManager.js"></script>
+<script src="js/PanelManager.js"></script>
 <!-- UI 工具层（必须在所有业务脚本之前加载） -->
 <script src="js/ui-utils.js"></script>
 <!-- 游戏模块 -->

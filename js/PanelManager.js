@@ -1,8 +1,9 @@
+// AI路径引导：如需查找其他文件路径和功能说明，请先查看项目根目录的 AI_PATH_GUIDE.md；每新增/修改一个文件后，必须同步更新AI_PATH_GUIDE.md
 // ==================== PanelManager 面板管理器 ====================
 
 /**
  * @fileoverview 面板管理器模块 - 统一管理游戏中各面板的生命周期
- * @module js/core/PanelManager
+ * @module js/PanelManager
  * @description 使用单例模式实现的面板管理器，提供面板注册、显示、隐藏、刷新等统一接口，
  *              通过 EventBus 触发面板相关事件，保持与现有面板函数的向后兼容。
  * @example
@@ -400,9 +401,6 @@
    * @type {PanelManager}
    */
   var PanelManager = new PanelManager();
-
-  // 防止外部修改实例
-  Object.freeze(PanelManager);
 
   // 导出到全局
   global.PanelManager = PanelManager;
