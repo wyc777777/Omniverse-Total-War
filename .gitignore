@@ -22,8 +22,8 @@ assets/api_config.json
 # Docs (development notes)
 docs/
 
-# Node portable (large binary, users download separately)
-node-portable/
+# Node portable is now tracked (needed for users without Node.js)
+# node-portable/
 
 # Generated images / promotional assets
 assets/video_thumbnail_vs.jpg
