@@ -18,3 +18,13 @@ assets/api_config.json
 # WorkBuddy / Trae internal
 .workbuddy/
 .trae-html-share-packages/
+
+# Node portable (large binary, users download separately)
+node-portable/
+
+# Generated images / promotional assets
+assets/video_thumbnail_vs.jpg
+assets/video_cover_battle_girl.jpg
+
+# Save files (user-specific)
+save/
