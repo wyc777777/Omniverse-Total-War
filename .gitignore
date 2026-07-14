@@ -19,6 +19,9 @@ assets/api_config.json
 .workbuddy/
 .trae-html-share-packages/
 
+# Docs (development notes)
+docs/
+
 # Node portable (large binary, users download separately)
 node-portable/
 
