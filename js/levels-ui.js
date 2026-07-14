@@ -679,7 +679,7 @@ function closeLevelBattleSettlement() {
     }
   }
 
-  // 清理棋盘
+  // 清理棋盘上的棋子（放回备战席）
   if (typeof placedPieces !== 'undefined') {
     Object.keys(placedPieces).forEach(function(k) {
       if (typeof returnToBench === 'function') returnToBench(placedPieces[k].slotIdx);
@@ -691,9 +691,24 @@ function closeLevelBattleSettlement() {
   if (typeof initTurns === 'function') initTurns();
   if (typeof interactionInited !== 'undefined') interactionInited = false;
 
-  // 隐藏幕布
+  // 重置幕布为初始显示状态（确保下一场战斗进入时幕布正常）
   var curtain = document.getElementById('battleCurtain');
-  if (curtain) { curtain.style.display = 'flex'; curtain.style.opacity = '1'; }
+  if (curtain) {
+    curtain.style.display = 'flex';
+    curtain.style.opacity = '1';
+    if (curtain.children) {
+      for (var i = 0; i < curtain.children.length; i++) {
+        curtain.children[i].style.opacity = '1';
+        curtain.children[i].style.transform = 'scale(1)';
+      }
+    }
+  }
+
+  // 清空作战日志（防止上一轮消息残留到下一场）
+  if (typeof clearCombatLog === 'function') clearCombatLog();
+
+  // 重置记分板
+  if (typeof resetScoreboard === 'function') resetScoreboard();
 
   // 清理临时注入的关卡敌方单位
   clearLevelOpponentUnits();
@@ -704,6 +719,22 @@ function closeLevelBattleSettlement() {
   window._currentLevelOpponent = null;
   if (typeof TurnState !== 'undefined') {
     TurnState.isLevelBattle = false;
+    TurnState.isAIBattle = false;
+  }
+
+  // 重置斗蛐蛐标记（防止不同对战模式间状态污染）
+  if (typeof TurnStateAPI !== 'undefined') {
+    TurnStateAPI.setDuelBattle(false);
+    TurnStateAPI.setSideControlled('player', false);
+    TurnStateAPI.setSideControlled('enemy', false);
+  }
+
+  // 更新计分板UI（须在 TurnState 标记重置之后）
+  if (typeof updateScoreboardUI === 'function') updateScoreboardUI();
+
+  // 清空历史栈（结算后不需要保留 Battle/Select 等临时页面的历史，避免返回时多次点击）
+  if (window.PanelManager && typeof PanelManager._clearHistory === 'function') {
+    PanelManager._clearHistory();
   }
 
   // 返回关卡选择页（showPage('Levels') 会自动调用 buildLevelsPage 刷新通关状态）

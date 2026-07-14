@@ -25,9 +25,9 @@ function buildBackgroundCache(){
     var rT=Math.round(165+30*(1-d/RADIUS)),gT=Math.round(145+25*(1-d/RADIUS)),bT=Math.round(115+20*(1-d/RADIUS));
     var fill,stroke,sw;
     if(d===0){fill='rgba(180,160,110,0.5)';stroke='#8b6914';sw=2}
-    else if(d<=1&&typeof TurnState!=='undefined'&&TurnState.phase==='deploy'){fill='rgba(200,150,130,0.45)';stroke='rgba(180,80,40,0.4)';sw=1}
-    else{fill='rgba('+rT+','+gT+','+bT+',0.7)';stroke='#c4b290';sw=1}
-    _bgCtx.fillStyle=fill;_bgCtx.fill();
+  else if(d<=1&&typeof Deployment!=='undefined'&&Deployment.isDeployPhase()){fill='rgba(200,150,130,0.45)';stroke='rgba(180,80,40,0.4)';sw=1}
+  else{fill='rgba('+rT+','+gT+','+bT+',0.7)';stroke='#c4b290';sw=1}
+  _bgCtx.fillStyle=fill;_bgCtx.fill();
     _bgCtx.strokeStyle=stroke;_bgCtx.lineWidth=sw;_bgCtx.stroke();
   });
 }
@@ -342,9 +342,13 @@ function getAttackAzimuth(atkHex, defHex, defFacing) {
   var atkDir = getDirectionBetween(defHex, atkHex);
   // 攻击方向与朝向的差值（顺时针）
   var diff = (atkDir - defFacing + 6) % 6;
-  // 0=正面, 1和5=侧面, 2/3/4=背面
-  if (diff === 0) return 'front';
-  if (diff === 1 || diff === 5) return 'flank';
+  // 方位判定（扩大正面范围）：
+  //   0       = 正面（朝向格）
+  //   1, 5    = 正面（朝向两边的格）
+  //   2, 4    = 侧面（背面两边的格）
+  //   3       = 背面（正后方格）
+  if (diff === 0 || diff === 1 || diff === 5) return 'front';
+  if (diff === 2 || diff === 4) return 'flank';
   return 'rear';
 }
 
@@ -398,6 +402,64 @@ const placedPieces={};
 
 function hPx(q,r,size){return{x:size*SQRT3*(q+r/2),y:size*3/2*r}}
 function hDist(a,b){return Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.s-b.s))}
+
+function getReachableHexes(startHex, movement, isFlying, team) {
+  var dirs = [
+    {q:+1,r:0},
+    {q:+1,r:-1},
+    {q:0,r:-1},
+    {q:-1,r:0},
+    {q:-1,r:+1},
+    {q:0,r:+1}
+  ];
+  var visited = {};
+  var startKey = startHex.q + ',' + startHex.r + ',' + startHex.s;
+  visited[startKey] = 0;
+  var queue = [{hex: startHex, dist: 0}];
+  var result = [];
+  while (queue.length > 0) {
+    var current = queue.shift();
+    var curHex = current.hex;
+    var curDist = current.dist;
+    if (curDist >= movement) continue;
+    for (var i = 0; i < 6; i++) {
+      var dir = dirs[i];
+      var nq = curHex.q + dir.q;
+      var nr = curHex.r + dir.r;
+      var ns = -nq - nr;
+      if (Math.abs(nq) > RADIUS || Math.abs(nr) > RADIUS || Math.abs(ns) > RADIUS) continue;
+      var neighbor = {q: nq, r: nr, s: ns};
+      var nKey = nq + ',' + nr + ',' + ns;
+      if (visited[nKey] !== undefined) continue;
+      var passable = true;
+      var canStay = true;
+      if (typeof isTerrainBlocked === 'function' && isTerrainBlocked(neighbor)) {
+        if (!isFlying) {
+          passable = false;
+        }
+        canStay = false;
+      }
+      if (passable) {
+        var piece = placedPieces[nKey];
+        if (piece) {
+          if (piece.team !== team) {
+            passable = false;
+            canStay = false;
+          } else {
+            canStay = false;
+          }
+        }
+      }
+      if (!passable) continue;
+      visited[nKey] = curDist + 1;
+      if (canStay) {
+        result.push({hex: neighbor, dist: curDist + 1});
+      }
+      queue.push({hex: neighbor, dist: curDist + 1});
+    }
+  }
+  return result;
+}
 
 function hCrn(cx,cy){var p=[];for(var i=0;i<6;i++){var a=Math.PI/180*(60*i-30);p.push({x:cx+HS*Math.cos(a),y:cy+HS*Math.sin(a)})}return p}
 
@@ -568,7 +630,7 @@ function drawHex(h,hl){
   else if(hasP){fill='rgba('+rT+','+gT+','+bT+',0.7)';stroke='#b8a080';sw=1.2}
   else if(d===0){fill='rgba(180,160,110,0.5)';stroke='#8b6914';sw=2}
   else if(hl==='hv'){fill='rgba(180,145,100,0.5)';stroke='#6b8e23';sw=2}
-  else if(d<=1&&TurnState.phase==='deploy'){fill='rgba(200,150,130,0.45)';stroke='rgba(180,80,40,0.4)';sw=1}
+  else if(d<=1&&typeof Deployment!=='undefined'&&Deployment.isDeployPhase()){fill='rgba(200,150,130,0.45)';stroke='rgba(180,80,40,0.4)';sw=1}
   else{fill='rgba('+rT+','+gT+','+bT+',0.7)';stroke='#c4b290';sw=1}
   ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=stroke;ctx.lineWidth=sw;ctx.stroke();
   if(hasP){
@@ -576,6 +638,7 @@ function drawHex(h,hl){
       // 正在动画中：不在此格绘制棋子，稍后由 drawAnimatingPiecesOnCanvas 绘制
     }else{
       // 行动完毕灰化效果
+      var acted = placedPieces[key]._actionUsedThisTurn || placedPieces[key]._attackedThisTick;
       var done = placedPieces[key]._actionUsedThisTurn && placedPieces[key]._attackedThisTick;
       var scale = HS * 0.88;
       // 悬停放大效果
@@ -615,7 +678,7 @@ function drawHex(h,hl){
       ctx.save();
       if(placeAlpha < 1) ctx.globalAlpha = placeAlpha;
       var finalScale = scale * selScale * placeScale;
-      if(done && TurnState.phase==='battle'){
+      if(acted && TurnState.phase==='battle'){
         ctx.globalAlpha=0.45 * placeAlpha;
       }
       drawUnitOnCanvas(cx + shakeOffX, cy + shakeOffY, placedPieces[key].unitType, placedPieces[key].team, finalScale);
@@ -712,11 +775,20 @@ function render(){
     var sp=placedPieces[selectedPieceKey],sh=sp.hex,ud=unitDefByType(sp.unitType),st=ud?getCachedStats(ud):null;
     var range=st?st.movement:1;
     var atkRange=st&&st.mainWeapon?st.mainWeapon.allowedRange:1;
-    hexes.forEach(function(h){
-      var key=h.q+','+h.r+','+h.s;
-      if(hDist(h,sh)<=range&&!placedPieces[key]&&!(typeof isTerrainBlocked==='function'&&isTerrainBlocked(h)))mv.add(key);
-      if(TurnState.phase==='battle'&&hDist(h,sh)<=atkRange&&hDist(h,sh)>=1&&placedPieces[key]&&placedPieces[key].team!==sp.team&&!placedPieces[key]._routed)atk.add(key);
-    })
+    var isFlying = st && st.baseType === 'flying';
+    // 已移动过则不显示移动范围；已攻击过则不显示攻击范围
+    if (!sp._actionUsedThisTurn) {
+      var reachable = getReachableHexes(sh, range, isFlying, sp.team);
+      for (var ri = 0; ri < reachable.length; ri++) {
+        mv.add(reachable[ri].hex.q + ',' + reachable[ri].hex.r + ',' + reachable[ri].hex.s);
+      }
+    }
+    if (!sp._attackedThisTick) {
+      hexes.forEach(function(h){
+        var key=h.q+','+h.r+','+h.s;
+        if(TurnState.phase==='battle'&&hDist(h,sh)<=atkRange&&hDist(h,sh)>=1&&placedPieces[key]&&placedPieces[key].team!==sp.team&&!placedPieces[key]._routed)atk.add(key);
+      })
+    }
   }
   // 动作一：棋盘入场序列 —— 战雾 + 逐圈显现
   var entryActive = _boardEntryAnim && _boardEntryAnim.active;

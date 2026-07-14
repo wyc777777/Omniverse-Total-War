@@ -124,25 +124,25 @@ var FALLBACK_DATA = {
       label:'低',
       desc:'敌方多为农民兵，AI 行动迟缓',
       enemy:["peasant_infantry","peasant_infantry","peasant_infantry","peasant_archer","peasant_archer","peasant_archer"],
-      ai:{targeting:"random",moveStyle:"random",maxMoveSteps:1}
+      ai:{targeting:"random",moveStyle:"random"}
     },
     medium:{
       label:'中',
       desc:'敌方混编农民与正规兵，AI 主动进攻',
       enemy:["peasant_infantry","peasant_infantry","infantry","peasant_archer","peasant_archer","archer"],
-      ai:{targeting:"nearest",moveStyle:"toward",maxMoveSteps:1}
+      ai:{targeting:"nearest",moveStyle:"toward"}
     },
     hard:{
       label:'高',
       desc:'敌方全正规兵种，AI 精准集火',
       enemy:["infantry","infantry","cavalry","cavalry","archer","flying"],
-      ai:{targeting:"weakest",moveStyle:"advance",maxMoveSteps:2}
+      ai:{targeting:"weakest",moveStyle:"advance"}
     },
     extreme:{
       label:'极难',
       desc:'敌方精锐大军压境，AI 穷追不舍',
       enemy:["infantry","infantry","infantry","cavalry","cavalry","cavalry","archer","archer","flying","flying"],
-      ai:{targeting:"focus_fire",moveStyle:"hunt",maxMoveSteps:3}
+      ai:{targeting:"focus_fire",moveStyle:"hunt"}
     }
   },defaultEnemy:["infantry","infantry","infantry","cavalry","cavalry","cavalry","archer","archer","flying","flying"]},
   LC: { levels: [

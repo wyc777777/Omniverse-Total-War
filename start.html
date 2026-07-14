@@ -216,6 +216,10 @@
         <div class="sb-total">伤害 <b id="sbDmgA">0</b> · 击杀 <b id="sbKillA">0</b></div>
       </div>
       <div class="combat-log" id="combatLogA" style="display:none;"></div>
+      <div class="unit-attr-panel" id="unitAttrPanelA" style="display:none;">
+        <div class="uap-header" onclick="toggleUnitAttrPanel('A')">⚔ 点击查看属性</div>
+        <div class="uap-body" id="unitAttrPanelABody"></div>
+      </div>
     </div>
     <div class="board-column">
       <div class="board-wrapper" id="boardDropZone" style="position:relative">
@@ -248,6 +252,10 @@
         <div class="sb-total">伤害 <b id="sbDmgB">0</b> · 击杀 <b id="sbKillB">0</b></div>
       </div>
       <div class="combat-log" id="combatLogB" style="display:none;"></div>
+      <div class="unit-attr-panel" id="unitAttrPanelB" style="display:none;">
+        <div class="uap-header" onclick="toggleUnitAttrPanel('B')">⚔ 点击查看属性</div>
+        <div class="uap-body" id="unitAttrPanelBBody"></div>
+      </div>
     </div>
   </div>
   <div class="info-panel">
@@ -291,10 +299,10 @@
 <script src="js/data-engine.js"></script>
 <script src="js/hex-board.js"></script>
 <script src="js/combat.js"></script>
+<script src="js/deployment.js"></script>
 <script src="js/turn-system.js"></script>
 <script src="js/settlement-system.js"></script>
 <script src="js/ai-engine.js"></script>
-<script src="js/bench.js"></script>
 <script src="js/interactions.js"></script>
 <script src="js/panels.js"></script>
 <script src="js/inventory-ui.js"></script>

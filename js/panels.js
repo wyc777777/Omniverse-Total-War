@@ -225,11 +225,27 @@ function getSelectedForBattle() { return selectedUnitTypes; }
 function updateUnitCard(piece) {
   var cd = document.getElementById('unitCard');
   if (!cd) return;
-  if (!piece) { cd.classList.remove('show'); return; }
+  if (!piece) {
+    // 隐藏卡片前保存滚动位置，隐藏后恢复，避免display:none导致页面高度变化引起滚动上移
+    var sy = window.scrollY;
+    cd.classList.remove('show');
+    if (window.scrollY !== sy) window.scrollTo(0, sy);
+    return;
+  }
   var ud = unitDefByType(piece.unitType);
-  if (!ud) { cd.classList.remove('show'); return; }
+  if (!ud) {
+    var sy2 = window.scrollY;
+    cd.classList.remove('show');
+    if (window.scrollY !== sy2) window.scrollTo(0, sy2);
+    return;
+  }
   var st = computeStats(ud);
-  if (!st) { cd.classList.remove('show'); return; }
+  if (!st) {
+    var sy3 = window.scrollY;
+    cd.classList.remove('show');
+    if (window.scrollY !== sy3) window.scrollTo(0, sy3);
+    return;
+  }
   var imgEl = document.getElementById('unitCardImg');
   var nameEl = document.getElementById('unitCardName');
   var bdEl = document.getElementById('unitCardBreakdown');
@@ -253,9 +269,8 @@ function updateUnitCard(piece) {
 function updateMoveHint() {
   var h = document.getElementById('moveHint');
   if (!h) return;
-  if (TurnState.phase === 'deploy') {
-    h.style.display = 'inline';
-    h.textContent = '📦 拖拽棋子到棋盘（棕红色格子禁止放置）';
+  if (typeof Deployment !== 'undefined' && Deployment.isDeployPhase()) {
+    if (typeof updateDeployHint === 'function') updateDeployHint();
     return;
   }
   if (selectedPieceKey && placedPieces[selectedPieceKey] && !placedPieces[selectedPieceKey]._routed) {

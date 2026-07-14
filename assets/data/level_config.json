@@ -74,7 +74,7 @@
       "id":"legend_5","name":"暗影王座","difficulty":"legend","tier":"gold","enemySetId":"setD","enemyUnitIds":["EC01","EC01","EC02","EC02","EE03","EE03","EE05","EE05"],"rewardPoints":1050,"guaranteedDrop":null,"desc":"暗影王座前的最终守卫，龙骑与死骑交错突击。"
     },
     {
-      "id":"legend_6","name":"万界霸主","difficulty":"legend","tier":"gold","enemySetId":"setD","enemyUnitIds":["EC01","EC01","EC01","EC02","EC02","EE03","EE03","EE05"],"rewardPoints":1200,"guaranteedDrop":"W027","desc":"万界霸主的终极军势！三铁卫双龙骑双死骑一怨灵倾巢而出，首通奖励暗裔重弩。"
+      "id":"legend_6","name":"万界霸主","difficulty":"legend","tier":"gold","enemySetId":"setD","enemyUnitIds":["EC01","EC01","EC01","EC02","EC02","EE03","EE03","EE05"],"rewardPoints":1200,"guaranteedDrop":"W028","desc":"万界霸主的终极军势！三铁卫双龙骑双死骑一怨灵倾巢而出，首通奖励万界终结者。"
     }
   ]
 }

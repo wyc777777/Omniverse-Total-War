@@ -5,45 +5,169 @@
     {
       "type": "peasant_archer",
       "name": "农民弓兵团",
-      "id": "u_1783317832155_55418_init_0"
+      "id": "u_1784018165201_49858_init_0"
     },
     {
       "type": "cavalry",
       "name": "暴风骑兵团",
-      "id": "u_1783317832155_55418_init_1"
+      "id": "u_1784018165201_49858_init_1"
     },
     {
       "type": "elite_archer",
       "name": "精锐弩兵兵团",
-      "id": "u_1783317832155_55418_init_2"
+      "id": "u_1784018165201_49858_init_2"
     },
     {
       "type": "beast_infantry",
       "name": "战犬侦查营",
-      "id": "u_1783317832155_55418_init_3"
+      "id": "u_1784018165201_49858_init_3"
     },
     {
       "type": "infantry",
       "name": "磐石重步兵团",
-      "id": "u_1783317832155_55418_init_4"
+      "id": "u_1784018165201_49858_init_4"
     },
     {
       "type": "flying",
       "name": "雷霆狮鹫空军兵团",
-      "id": "u_1783317832155_55418_init_5"
+      "id": "u_1784018165201_49858_init_5"
+    },
+    {
+      "id": "s_1784018429311_1yll",
+      "type": "infantry_U102_zti3",
+      "name": "赫尔登长矛卫队"
+    },
+    {
+      "id": "s_1784018460694_ky8l",
+      "type": "infantry_U105_flxf",
+      "name": "铁冠守卫"
+    },
+    {
+      "id": "s_1784018495039_2c6o",
+      "type": "infantry_U109_rmeh",
+      "name": "战歌氏族劫掠者"
+    },
+    {
+      "id": "s_1784018542681_0eqb",
+      "type": "infantry_U113_82qb",
+      "name": "乌萨斯裂谷铁卫团"
+    },
+    {
+      "id": "s_1784018583079_90we",
+      "type": "archer_U116_d65e",
+      "name": "夏尔义勇军"
+    },
+    {
+      "id": "s_1784018660710_6y2v",
+      "type": "infantry_U119_ch6e",
+      "name": "荒原潮痕兵"
+    },
+    {
+      "id": "s_1784018840989_bbjr",
+      "type": "cavalry_U123_7gxc",
+      "name": "今州夜巡骑兵"
+    },
+    {
+      "id": "s_1784018878545_twrq",
+      "type": "infantry_U126_5yun",
+      "name": "今汐亲卫女队"
+    },
+    {
+      "id": "s_1784018913358_ie5y",
+      "type": "infantry_U130_xpt3",
+      "name": "今州汐卫队"
     }
   ],
   "points": 1000,
-  "timestamp": "2026-07-06T06:12:25.294Z",
+  "timestamp": "2026-07-14T12:50:04.470Z",
   "inventory": {
-    "weapons": [],
+    "weapons": [
+      {
+        "id": "W002",
+        "tier": "iron",
+        "name": "制式精铁长戈",
+        "category": "近战武器",
+        "type": "long",
+        "handed": "two-handed",
+        "slot": "main",
+        "baseDamage": 13,
+        "armorPierce": 3,
+        "attackRange": 1,
+        "allowedRange": 1,
+        "forUnits": [
+          "步兵",
+          "骑兵",
+          "空军"
+        ],
+        "effects": [
+          "抵御冲锋"
+        ],
+        "desc": "双手长柄武器，抵御冲锋：正面防守骑兵时清零对方冲锋动能"
+      }
+    ],
     "shields": [],
     "armors": [],
     "mounts": []
   },
-  "_summonHistory": [],
+  "_summonHistory": [
+    {
+      "cost": 600,
+      "name": "今州汐卫队",
+      "type": "infantry",
+      "time": "16:48:33"
+    },
+    {
+      "cost": 600,
+      "name": "今汐亲卫女队",
+      "type": "infantry",
+      "time": "16:47:58"
+    },
+    {
+      "cost": 600,
+      "name": "今州夜巡骑兵",
+      "type": "cavalry",
+      "time": "16:47:20"
+    },
+    {
+      "cost": 600,
+      "name": "荒原潮痕兵",
+      "type": "infantry",
+      "time": "16:44:20"
+    },
+    {
+      "cost": 200,
+      "name": "夏尔义勇军",
+      "type": "archer",
+      "time": "16:43:03"
+    },
+    {
+      "cost": 600,
+      "name": "乌萨斯裂谷铁卫团",
+      "type": "infantry",
+      "time": "16:42:22"
+    },
+    {
+      "cost": 600,
+      "name": "战歌氏族劫掠者",
+      "type": "infantry",
+      "time": "16:41:35"
+    },
+    {
+      "cost": 600,
+      "name": "铁冠守卫",
+      "type": "infantry",
+      "time": "16:41:00"
+    },
+    {
+      "cost": 600,
+      "name": "赫尔登长矛卫队",
+      "type": "infantry",
+      "time": "16:40:29"
+    }
+  ],
   "summonModel": "deepseek-v4-flash",
   "completedLevels": {},
+  "_cheatKWUsed": true,
   "name": "战报一",
-  "_serverSavedAt": "2026-07-06T06:12:25.307Z"
+  "_serverSavedAt": "2026-07-14T12:50:04.475Z"
 }

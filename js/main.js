@@ -284,6 +284,14 @@ function _doShowPage(name, data) {
     window.PageTransitions.setSkipStagger(true);
   }
 
+  // 防御性措施：确保只有新页面显示，其他所有页面都隐藏
+  var allPages = document.querySelectorAll('.page');
+  allPages.forEach(function(p) {
+    if (p !== newEl) {
+      p.classList.remove('active');
+    }
+  });
+
   if (window.PageTransitions && oldEl && newEl && currentPage && window.gsap) {
     var prepPage = document.getElementById('pagePrep');
     if (prepPage) prepPage.classList.remove('no-gsap');
@@ -300,6 +308,12 @@ function _doShowPage(name, data) {
     PageTransitions.pageTransition(oldEl, newEl, {
       onVisible: function() {},
       onComplete: function() {
+        // 再次确保只有新页面显示（防御性）
+        var allPages2 = document.querySelectorAll('.page');
+        allPages2.forEach(function(p) {
+          p.classList.toggle('active', p === newEl);
+        });
+
         // 首次进入：播放 stagger 入场动画
         if (!_enteredPages[name]) {
           _enteredPages[name] = true;
@@ -321,7 +335,6 @@ function _doShowPage(name, data) {
   } else {
     var prepPage = document.getElementById('pagePrep');
     if (prepPage && !window.gsap) prepPage.classList.add('no-gsap');
-    if (oldEl) oldEl.classList.remove('active');
     if (newEl) newEl.classList.add('active');
     buildContent();
     applyPageWallpaper(name);
@@ -386,7 +399,12 @@ function goBack() {
     return;
   }
   if (window.PanelManager) {
+    // 跳过历史栈中的 Battle、Select（战斗流程临时页面）和当前页面本身
+    // 这些页面在结算后不应作为返回目标，避免用户需要多次点击返回
     var prevId = PanelManager._popHistory();
+    while (prevId === 'Battle' || prevId === 'Select' || prevId === currentPage) {
+      prevId = PanelManager._popHistory();
+    }
     if (prevId && PanelManager.has(prevId)) {
       showPage(prevId);
       return;
@@ -577,20 +595,25 @@ function exitBattle() {
     window._duelBattleData = null;
   }
 
-  // 重置记分板（含溃散归档数据）
-  if (typeof Scoreboard !== 'undefined') {
-    Scoreboard.damage = { player: 0, enemy: 0 };
-    Scoreboard.kills = { player: 0, enemy: 0 };
-    Scoreboard.routedArchive = [];
+  // 重置记分板数据（使用 ScoreboardService 解耦）
+  if (typeof ScoreboardService !== 'undefined') {
+    // 直接重置数据，不触发 UI 更新（此时可能不在战斗页面）
+    var _sb = ScoreboardService.getStats();
+    _sb.damage.player = 0; _sb.damage.enemy = 0;
+    _sb.kills.player = 0; _sb.kills.enemy = 0;
+    _sb.routedArchive = [];
   }
 
-  // 重置所有对战类型标记（防止关卡/斗蛐蛐/AI对战之间状态泄露）
-  if (typeof TurnState !== 'undefined') {
-    TurnState.isDuelBattle = false;
-    TurnState.isLevelBattle = false;
-    TurnState.isAIBattle = false;
-    TurnState.sideAControlledByAI = false;
-    TurnState.sideBControlledByAI = false;
+  // 重置所有对战类型标记（使用 TurnStateAPI 解耦，防止状态泄露）
+  if (typeof TurnStateAPI !== 'undefined') {
+    TurnStateAPI.setDuelBattle(false);
+    TurnStateAPI.setSideControlled('player', false);
+    TurnStateAPI.setSideControlled('enemy', false);
+    // isLevelBattle 和 isAIBattle 是 AI 对战专用属性，TurnStateAPI 未覆盖
+    if (typeof TurnState !== 'undefined') {
+      TurnState.isLevelBattle = false;
+      TurnState.isAIBattle = false;
+    }
   }
 
   // 清除关卡/AI对战运行时状态（防止结算时 else-if 兜底误判对战类型）
@@ -606,6 +629,11 @@ function exitBattle() {
   // 清空作战日志、恢复备战席显示（须在 TurnState 标记重置之后）
   if (typeof clearCombatLog === 'function') clearCombatLog();
   if (typeof updateScoreboardUI === 'function') updateScoreboardUI();
+
+  // 清空历史栈（退出战斗后不需要保留 Battle/Select/DuelArena 等临时页面的历史，避免返回时多次点击）
+  if (window.PanelManager && typeof PanelManager._clearHistory === 'function') {
+    PanelManager._clearHistory();
+  }
 
   // 统一走 showPage 逻辑，确保动画一致
   showPage('Prep');

@@ -348,6 +348,11 @@
     return this._history.pop();
   };
 
+  // 清空历史栈
+  PanelManager.prototype._clearHistory = function() {
+    this._history = [];
+  };
+
   PanelManager.prototype._setActive = function(panelId) {
     if (this._panels.has(panelId)) {
       this._activePanelId = panelId;

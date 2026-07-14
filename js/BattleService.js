@@ -115,8 +115,8 @@
 
     var playerAlive = 0, enemyAlive = 0;
 
-    Object.keys(placedPieces).forEach(function(key) {
-      var p = placedPieces[key];
+    // 使用 BoardAPI 解耦遍历棋子
+    BoardAPI.forEach(function(p) {
       if (p._routed) return;
       if (p.team === 'player') playerAlive++;
       else enemyAlive++;
@@ -124,9 +124,11 @@
 
     var playerTotal = 0;
     var enemyTotal = 0;
-    if (typeof TurnState !== 'undefined') {
-      playerTotal = TurnState.totalPlayer || 0;
-      enemyTotal = TurnState.totalEnemy || 0;
+    // 使用 TurnStateAPI 解耦读取总数
+    if (typeof TurnStateAPI !== 'undefined') {
+      var _t = TurnStateAPI.getTotals();
+      playerTotal = _t.totalPlayer || 0;
+      enemyTotal = _t.totalEnemy || 0;
     }
 
     if (playerTotal === 0 && enemyTotal === 0) return null;
@@ -383,10 +385,7 @@
    * @description 获取棋子的完整属性（含运行时状态），调用全局 getPieceStats 函数。
    */
   BattleService.prototype.getPieceStats = function(piece) {
-    if (typeof getPieceStats === 'function') {
-      return getPieceStats(piece);
-    }
-    return null;
+    return computePieceStats(piece);
   };
 
   // ===== 导出单例 =====
@@ -399,3 +398,199 @@
   global.BattleService = new BattleService();
 
 })(typeof window !== 'undefined' ? window : this);
+
+// ===== BoardAPI 棋盘操作接口 =====
+// 解耦层：封装全局 placedPieces 的所有读写操作
+// 其他模块应通过 BoardAPI 访问棋盘数据，避免直接操作 placedPieces
+var BoardAPI = {
+  /**
+   * 根据 key 获取棋子对象
+   * @param {string} key - 棋子键名（格式："q,r,s"）
+   * @returns {Object|undefined} 棋子对象，不存在则返回 undefined
+   */
+  getPiece: function(key) {
+    return placedPieces[key];
+  },
+
+  /**
+   * 添加棋子到棋盘
+   * @param {string} key - 棋子键名（格式："q,r,s"）
+   * @param {Object} piece - 棋子对象
+   * @returns {Object} 刚添加的棋子对象
+   */
+  addPiece: function(key, piece) {
+    placedPieces[key] = piece;
+    return piece;
+  },
+
+  /**
+   * 从棋盘移除棋子（delete 操作）
+   * @param {string} key - 棋子键名（格式："q,r,s"）
+   * @returns {boolean} 是否成功移除（true 表示原本存在并已移除）
+   */
+  removePiece: function(key) {
+    if (placedPieces.hasOwnProperty(key)) {
+      delete placedPieces[key];
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * 检查某 key 是否有棋子
+   * @param {string} key - 棋子键名（格式："q,r,s"）
+   * @returns {boolean} 存在返回 true，否则 false
+   */
+  hasPiece: function(key) {
+    return placedPieces.hasOwnProperty(key);
+  },
+
+  /**
+   * 返回所有棋子数组（用于遍历）
+   * @returns {Array<Object>} 所有棋子对象组成的数组
+   */
+  getAllPieces: function() {
+    var result = [];
+    for (var key in placedPieces) {
+      if (placedPieces.hasOwnProperty(key)) {
+        result.push(placedPieces[key]);
+      }
+    }
+    return result;
+  },
+
+  /**
+   * 返回指定队伍的棋子数组
+   * @param {string} team - 队伍标识（'player' | 'enemy'）
+   * @returns {Array<Object>} 该队伍所有棋子组成的数组
+   */
+  getPiecesByTeam: function(team) {
+    var result = [];
+    for (var key in placedPieces) {
+      if (placedPieces.hasOwnProperty(key) && placedPieces[key].team === team) {
+        result.push(placedPieces[key]);
+      }
+    }
+    return result;
+  },
+
+  /**
+   * 返回指定队伍的存活棋子（非 _routed）
+   * @param {string} team - 队伍标识（'player' | 'enemy'）
+   * @returns {Array<Object>} 该队伍存活棋子组成的数组
+   */
+  getAlivePiecesByTeam: function(team) {
+    var result = [];
+    for (var key in placedPieces) {
+      if (placedPieces.hasOwnProperty(key)) {
+        var p = placedPieces[key];
+        if (p.team === team && !p._routed) {
+          result.push(p);
+        }
+      }
+    }
+    return result;
+  },
+
+  /**
+   * 遍历所有棋子
+   * @param {Function} callback - 回调函数，接收 (piece, key)
+   */
+  forEach: function(callback) {
+    if (typeof callback !== 'function') return;
+    for (var key in placedPieces) {
+      if (placedPieces.hasOwnProperty(key)) {
+        callback(placedPieces[key], key);
+      }
+    }
+  },
+
+  /**
+   * 根据 hex 坐标生成 key（"q,r,s" 格式）
+   * @param {Object} hex - 六边形坐标对象，包含 q、r、s 属性
+   * @returns {string} 棋子键名（格式："q,r,s"），hex 为空时返回空字符串
+   */
+  getPieceKey: function(hex) {
+    if (!hex) return '';
+    return hex.q + ',' + hex.r + ',' + hex.s;
+  },
+
+  /**
+   * 根据 hex 坐标查找棋子
+   * @param {Object} hex - 六边形坐标对象，包含 q、r、s 属性
+   * @returns {Object|undefined} 找到的棋子对象，未找到则返回 undefined
+   */
+  findPieceByHex: function(hex) {
+    if (!hex) return undefined;
+    for (var key in placedPieces) {
+      if (placedPieces.hasOwnProperty(key)) {
+        var p = placedPieces[key];
+        if (p && p.hex && p.hex.q === hex.q && p.hex.r === hex.r && p.hex.s === hex.s) {
+          return p;
+        }
+      }
+    }
+    return undefined;
+  },
+
+  /**
+   * 清空所有棋子
+   */
+  clear: function() {
+    for (var key in placedPieces) {
+      if (placedPieces.hasOwnProperty(key)) {
+        delete placedPieces[key];
+      }
+    }
+  }
+};
+
+// ===== 棋子属性计算（从 turn-system.js 迁移）=====
+// 迁移原因：属性计算逻辑属于战斗服务职责，不应放在回合系统中
+
+/**
+ * 获取棋子完整属性（含运行时状态）
+ * @param {Object} piece - 棋子对象
+ * @returns {Object|null} 计算后的属性对象
+ */
+function computePieceStats(piece) {
+  var ud = unitDefByType(piece.unitType);
+  if (!ud) return null;
+  var st = computeStats(ud);
+  if (!st) return null;
+  st.baseType = ud.baseType || ud.type;
+  if (piece._currentHP !== undefined) st.totalHP = piece._currentHP;
+  if (piece._currentCount !== undefined) st.unitCount = piece._currentCount;
+  if (piece._currentMorale !== undefined) st.morale = piece._currentMorale;
+  st.hpPerUnit = (piece._currentHP && piece._currentCount)
+    ? Math.ceil(piece._currentHP / piece._currentCount) : st.hpPerUnit;
+  return st;
+}
+
+/**
+ * 初始化棋子运行时状态
+ * @param {Object} piece - 棋子对象
+ */
+function initPieceRuntimeState(piece) {
+  var ud = unitDefByType(piece.unitType);
+  if (!ud) return;
+  var st = computeStats(ud);
+  if (!st) return;
+  piece._currentHP = st.totalHP;
+  piece._currentCount = ud.unitCount;
+  piece._currentMorale = st.morale;
+  piece._initialHP = st.totalHP;
+  piece._initialCount = ud.unitCount;
+  piece._initialMorale = st.morale;
+  piece._routed = false;
+  piece._actionUsedThisTurn = false;
+  piece._attackedThisTick = false;
+  piece._wasAttackedThisTurn = false;
+  // 朝向：默认朝右，放置时会根据位置重新计算
+  piece._facing = piece._facing !== undefined ? piece._facing : 0;
+  // 状态系统
+  piece._statuses = piece._statuses || {};
+  // 记分板：每个棋子独立追踪伤害和击杀
+  piece._damageDealt = 0;
+  piece._kills = 0;
+}

@@ -28,6 +28,141 @@ var TurnState = {
   _aiPersonality: {} //  key: team, value: 'offensive'|'defensive'|'balanced'
 };
 
+// ==================== TurnStateAPI ====================
+// 全局回合状态访问接口：封装 TurnState 的读取和变更操作
+// 内部仍操作全局 TurnState 变量，保持向后兼容
+var TurnStateAPI = {
+  // ===== 读取接口 =====
+
+  // 返回当前阶段 ('dice' | 'deploy' | 'battle' | 'ended')
+  getPhase: function() {
+    return TurnState.phase;
+  },
+
+  // 返回当前行动方 ('player' | 'enemy')
+  getCurrentPlayer: function() {
+    return TurnState.currentPlayer;
+  },
+
+  // 返回当前回合数
+  getCurrentRound: function() {
+    return TurnState.currentRound;
+  },
+
+  // 返回先手方
+  getFirstPlayer: function() {
+    return TurnState.firstPlayer;
+  },
+
+  // 返回后手方（在 startBattlePhase 中设置）
+  getSecondPlayer: function() {
+    return TurnState.secondPlayer;
+  },
+
+  // 返回难度
+  getDifficulty: function() {
+    return TurnState.difficulty;
+  },
+
+  // 返回是否斗蛐蛐模式
+  isDuelBattle: function() {
+    return !!TurnState.isDuelBattle;
+  },
+
+  // 判断某阵营是否由 AI 控制（委托给全局 isControlledByAI 函数）
+  isControlledByAI: function(team) {
+    if (typeof isControlledByAI === 'function') {
+      return isControlledByAI(team);
+    }
+    // 兜底实现：与全局函数逻辑保持一致
+    if (TurnState.isDuelBattle) {
+      if (team === 'player') return !!TurnState.sideAControlledByAI;
+      if (team === 'enemy') return !!TurnState.sideBControlledByAI;
+    }
+    return team === 'enemy';
+  },
+
+  // 返回部署计数对象
+  getDeployCount: function() {
+    return TurnState.deployCount;
+  },
+
+  // 返回双方总数 {totalPlayer, totalEnemy}
+  getTotals: function() {
+    return {
+      totalPlayer: TurnState.totalPlayer,
+      totalEnemy: TurnState.totalEnemy
+    };
+  },
+
+  // 返回 AI 回合是否活跃
+  isAITurnActive: function() {
+    return !!TurnState._aiTurnActive;
+  },
+
+  // 返回指定阵营的 AI 性格
+  getAIPersonality: function(team) {
+    return TurnState._aiPersonality[team];
+  },
+
+  // ===== 变更接口 =====
+
+  // 设置当前阶段
+  setPhase: function(phase) {
+    TurnState.phase = phase;
+  },
+
+  // 设置当前行动方
+  setCurrentPlayer: function(player) {
+    TurnState.currentPlayer = player;
+  },
+
+  // 设置斗蛐蛐模式标记
+  setDuelBattle: function(flag) {
+    TurnState.isDuelBattle = !!flag;
+  },
+
+  // 设置某方是否由 AI 控制
+  setSideControlled: function(team, flag) {
+    if (team === 'player') {
+      TurnState.sideAControlledByAI = !!flag;
+    } else if (team === 'enemy') {
+      TurnState.sideBControlledByAI = !!flag;
+    }
+  },
+
+  // 设置难度
+  setDifficulty: function(diff) {
+    TurnState.difficulty = diff;
+  },
+
+  // 设置先手方
+  setFirstPlayer: function(player) {
+    TurnState.firstPlayer = player;
+  },
+
+  // 设置部署计数
+  setDeployCount: function(counts) {
+    TurnState.deployCount = counts;
+  },
+
+  // 设置双方总数
+  setTotals: function(player, enemy) {
+    TurnState.totalPlayer = player;
+    TurnState.totalEnemy = enemy;
+  },
+
+  // 设置 AI 回合活跃标记
+  setAITurnActive: function(flag) {
+    TurnState._aiTurnActive = !!flag;
+  },
+
+  // 设置指定阵营的 AI 性格
+  setAIPersonality: function(team, personality) {
+    TurnState._aiPersonality[team] = personality;
+  }
+};
+
 // ===== 对战速度倍率（斗蛐蛐模式用，默认 1.0，可选 0.5/1/2/5）=====
 var BATTLE_SPEED_MULT = 1.0;
 
@@ -115,7 +250,10 @@ function resetScoreboard() {
 }
 
 function updateScoreboardUI() {
-  var show = TurnState.isDuelBattle && TurnState.phase === 'battle';
+  var isDuel = !!TurnState.isDuelBattle;
+  var isBattlePhase = TurnState.phase === 'battle';
+  var showScoreboard = isDuel && isBattlePhase;
+  var hideBenchInBattle = isBattlePhase;
 
   // 切换备战席/计分板显示
   var benchLeft = document.getElementById('benchLeft');
@@ -127,91 +265,164 @@ function updateScoreboardUI() {
   var benchColLeft = document.getElementById('benchColLeft');
   var benchColRight = document.getElementById('benchColRight');
 
-  if (show) {
-    // 战斗阶段：隐藏备战席，显示计分板
+  // 战斗阶段隐藏备战席（所有模式都隐藏，斗蛐蛐额外显示计分板）
+  if (hideBenchInBattle) {
     if (benchLeft) benchLeft.style.display = 'none';
     if (benchRight) benchRight.style.display = 'none';
+    if (benchColLeft) benchColLeft.classList.add('battle-mode');
+    if (benchColRight) benchColRight.classList.add('battle-mode');
+  } else {
+    if (benchLeft) benchLeft.style.display = '';
+    if (benchRight) benchRight.style.display = '';
+    if (benchColLeft) benchColLeft.classList.remove('battle-mode');
+    if (benchColRight) benchColRight.classList.remove('battle-mode');
+  }
+
+  // 计分板仅斗蛐蛐模式战斗阶段显示
+  if (showScoreboard) {
     if (sbInlineA) sbInlineA.style.display = 'flex';
     if (sbInlineB) sbInlineB.style.display = 'flex';
-    // 更新标题为势力名称
     var sideAName = (window._duelBattleData && window._duelBattleData.sideA && window._duelBattleData.sideA.name) || '甲方';
     var sideBName = (window._duelBattleData && window._duelBattleData.sideB && window._duelBattleData.sideB.name) || '乙方';
     if (benchTitleLeft) benchTitleLeft.textContent = '🔷 ' + sideAName;
     if (benchTitleRight) benchTitleRight.textContent = '🔶 ' + sideBName;
-    if (benchColLeft) benchColLeft.classList.add('battle-mode');
-    if (benchColRight) benchColRight.classList.add('battle-mode');
-    // 更新计分板标题
     var sbHA = document.getElementById('sbHeaderA');
     var sbHB = document.getElementById('sbHeaderB');
     if (sbHA) sbHA.textContent = sideAName;
     if (sbHB) sbHB.textContent = sideBName;
   } else {
-    // 非战斗阶段：显示备战席，隐藏计分板
-    if (benchLeft) benchLeft.style.display = '';
-    if (benchRight) benchRight.style.display = '';
     if (sbInlineA) sbInlineA.style.display = 'none';
     if (sbInlineB) sbInlineB.style.display = 'none';
-    if (benchTitleLeft) benchTitleLeft.textContent = '🔷 我方';
-    if (benchTitleRight) benchTitleRight.textContent = '🔶 敌方';
-    if (benchColLeft) benchColLeft.classList.remove('battle-mode');
-    if (benchColRight) benchColRight.classList.remove('battle-mode');
+    if (!hideBenchInBattle) {
+      if (benchTitleLeft) benchTitleLeft.textContent = '🔷 我方';
+      if (benchTitleRight) benchTitleRight.textContent = '🔶 敌方';
+    }
   }
 
-  if (!show) return;
+  if (showScoreboard) {
+    // 收集双方棋子数据（存活棋子 + 已溃散归档数据）
+    var sideA = [], sideB = [];
+    for (var k in placedPieces) {
+      var p = placedPieces[k];
+      if (p._routed) continue;
+      var ud = typeof unitDefByType === 'function' ? unitDefByType(p.unitType) : null;
+      var name = ud ? ud.name : '???';
+      var dmg = p._damageDealt || 0;
+      var kills = p._kills || 0;
+      if (dmg === 0 && kills === 0) continue;
+      var entry = { name: name, dmg: dmg, kills: kills, unitType: p.unitType };
+      if (p.team === 'player') sideA.push(entry);
+      else sideB.push(entry);
+    }
+    // 合并已溃散单位的归档数据
+    Scoreboard.routedArchive.forEach(function(e) {
+      var entry = { name: e.name + '\u2020', dmg: e.dmg, kills: e.kills, unitType: e.unitType };
+      if (e.team === 'player') sideA.push(entry);
+      else sideB.push(entry);
+    });
 
-  // 收集双方棋子数据（存活棋子 + 已溃散归档数据）
-  var sideA = [], sideB = [];
-  for (var k in placedPieces) {
-    var p = placedPieces[k];
-    if (p._routed) continue;
-    var ud = typeof unitDefByType === 'function' ? unitDefByType(p.unitType) : null;
-    var name = ud ? ud.name : '???';
-    var dmg = p._damageDealt || 0;
-    var kills = p._kills || 0;
-    if (dmg === 0 && kills === 0) continue;
-    var entry = { name: name, dmg: dmg, kills: kills, unitType: p.unitType };
-    if (p.team === 'player') sideA.push(entry);
-    else sideB.push(entry);
+    // 按伤害排序
+    sideA.sort(function(a,b){ return b.dmg - a.dmg; });
+    sideB.sort(function(a,b){ return b.dmg - a.dmg; });
+
+    var listA = document.getElementById('sbListA');
+    var listB = document.getElementById('sbListB');
+    var dmgA = document.getElementById('sbDmgA');
+    var dmgB = document.getElementById('sbDmgB');
+    var killA = document.getElementById('sbKillA');
+    var killB = document.getElementById('sbKillB');
+
+    if (listA) listA.innerHTML = sideA.length === 0 ? '<div class="sb-empty">暂无数据</div>' : sideA.map(function(e) {
+      return '<div class="sb-row"><span class="sb-name">' + getUnitTypeEmoji(e.unitType) + ' ' + escapeHtml(e.name) + '</span><span class="sb-num">' + e.dmg + '</span><span class="sb-num">' + e.kills + '</span></div>';
+    }).join('');
+    if (listB) listB.innerHTML = sideB.length === 0 ? '<div class="sb-empty">暂无数据</div>' : sideB.map(function(e) {
+      return '<div class="sb-row"><span class="sb-name">' + getUnitTypeEmoji(e.unitType) + ' ' + escapeHtml(e.name) + '</span><span class="sb-num">' + e.dmg + '</span><span class="sb-num">' + e.kills + '</span></div>';
+    }).join('');
+
+    // 总计
+    var totalDmgA = 0, totalKillA = 0, totalDmgB = 0, totalKillB = 0;
+    sideA.forEach(function(e){ totalDmgA += e.dmg; totalKillA += e.kills; });
+    sideB.forEach(function(e){ totalDmgB += e.dmg; totalKillB += e.kills; });
+    if (dmgA) dmgA.textContent = totalDmgA;
+    if (dmgB) dmgB.textContent = totalDmgB;
+    if (killA) killA.textContent = totalKillA;
+    if (killB) killB.textContent = totalKillB;
   }
-  // 合并已溃散单位的归档数据
-  Scoreboard.routedArchive.forEach(function(e) {
-    var entry = { name: e.name + '\u2020', dmg: e.dmg, kills: e.kills, unitType: e.unitType };
-    if (e.team === 'player') sideA.push(entry);
-    else sideB.push(entry);
-  });
 
-  // 按伤害排序
-  sideA.sort(function(a,b){ return b.dmg - a.dmg; });
-  sideB.sort(function(a,b){ return b.dmg - a.dmg; });
-
-  var listA = document.getElementById('sbListA');
-  var listB = document.getElementById('sbListB');
-  var dmgA = document.getElementById('sbDmgA');
-  var dmgB = document.getElementById('sbDmgB');
-  var killA = document.getElementById('sbKillA');
-  var killB = document.getElementById('sbKillB');
-
-  if (listA) listA.innerHTML = sideA.length === 0 ? '<div class="sb-empty">暂无数据</div>' : sideA.map(function(e) {
-    return '<div class="sb-row"><span class="sb-name">' + getUnitTypeEmoji(e.unitType) + ' ' + escapeHtml(e.name) + '</span><span class="sb-num">' + e.dmg + '</span><span class="sb-num">' + e.kills + '</span></div>';
-  }).join('');
-  if (listB) listB.innerHTML = sideB.length === 0 ? '<div class="sb-empty">暂无数据</div>' : sideB.map(function(e) {
-    return '<div class="sb-row"><span class="sb-name">' + getUnitTypeEmoji(e.unitType) + ' ' + escapeHtml(e.name) + '</span><span class="sb-num">' + e.dmg + '</span><span class="sb-num">' + e.kills + '</span></div>';
-  }).join('');
-
-  // 总计
-  var totalDmgA = 0, totalKillA = 0, totalDmgB = 0, totalKillB = 0;
-  sideA.forEach(function(e){ totalDmgA += e.dmg; totalKillA += e.kills; });
-  sideB.forEach(function(e){ totalDmgB += e.dmg; totalKillB += e.kills; });
-  if (dmgA) dmgA.textContent = totalDmgA;
-  if (dmgB) dmgB.textContent = totalDmgB;
-  if (killA) killA.textContent = totalKillA;
-  if (killB) killB.textContent = totalKillB;
-
-  // 切换作战日志可见性
+  // 作战日志：所有模式战斗阶段都显示
   var logA = document.getElementById('combatLogA');
   var logB = document.getElementById('combatLogB');
-  if (logA) logA.style.display = show ? 'flex' : 'none';
-  if (logB) logB.style.display = show ? 'flex' : 'none';
+  if (logA) logA.style.display = isBattlePhase ? 'flex' : 'none';
+  if (logB) logB.style.display = isBattlePhase ? 'flex' : 'none';
+
+  // 属性面板（快捷属性栏）：仅斗蛐蛐模式战斗阶段显示
+  var attrPanelA = document.getElementById('unitAttrPanelA');
+  var attrPanelB = document.getElementById('unitAttrPanelB');
+  if (attrPanelA) attrPanelA.style.display = showScoreboard ? 'block' : 'none';
+  if (attrPanelB) attrPanelB.style.display = showScoreboard ? 'block' : 'none';
+
+  if (showScoreboard) {
+    updateUnitAttrPanel('A');
+    updateUnitAttrPanel('B');
+  }
+}
+
+function toggleUnitAttrPanel(side) {
+  var panelBody = document.getElementById('unitAttrPanel' + side + 'Body');
+  if (!panelBody) return;
+  panelBody.style.display = panelBody.style.display === 'none' ? 'flex' : 'none';
+}
+
+function updateUnitAttrPanel(side) {
+  var team = side === 'A' ? 'player' : 'enemy';
+  var body = document.getElementById('unitAttrPanel' + side + 'Body');
+  if (!body) return;
+
+  var pieces = [];
+  for (var k in placedPieces) {
+    var p = placedPieces[k];
+    if (p.team === team && !p._routed) {
+      pieces.push(p);
+    }
+  }
+
+  if (pieces.length === 0) {
+    body.innerHTML = '<div class="uap-empty">暂无单位</div>';
+    return;
+  }
+
+  var html = '';
+  pieces.forEach(function(p) {
+    var ud = typeof unitDefByType === 'function' ? unitDefByType(p.unitType) : null;
+    var st = typeof getPieceStats === 'function' ? getPieceStats(p) : null;
+    var name = ud ? ud.name : '???';
+
+    html += '<div class="uap-title">' + getUnitTypeEmoji(p.unitType) + ' ' + escapeHtml(name) + '</div>';
+
+    if (st) {
+      var weaponName = st.mainWeapon ? st.mainWeapon.name : '无';
+      var armorName = st.armor ? st.armor.name : '无';
+      var shieldName = st.shield ? st.shield.name : '无';
+      var atkVal = st.mainBase !== undefined ? st.mainBase : (st.mainWeapon ? st.mainWeapon.baseDamage : 0);
+      var defVal = st.totalArmor !== undefined ? st.totalArmor : 0;
+      var moveVal = st.movement !== undefined ? st.movement : (st.moveSpeed || 1);
+      var rangeVal = st.allowedRange !== undefined ? st.allowedRange : (st.attackRange || 1);
+
+      html += '<div class="uap-row"><span class="uap-label">武器</span><span class="uap-value">' + escapeHtml(weaponName) + '</span></div>';
+      if (st.shield) {
+        html += '<div class="uap-row"><span class="uap-label">盾牌</span><span class="uap-value">' + escapeHtml(shieldName) + '</span></div>';
+      }
+      html += '<div class="uap-row"><span class="uap-label">护甲</span><span class="uap-value">' + escapeHtml(armorName) + '</span></div>';
+      html += '<div class="uap-row"><span class="uap-label">攻击</span><span class="uap-value">' + atkVal + '</span></div>';
+      html += '<div class="uap-row"><span class="uap-label">防御</span><span class="uap-value">' + defVal + '</span></div>';
+      html += '<div class="uap-row"><span class="uap-label">移动</span><span class="uap-value">' + moveVal + '</span></div>';
+      html += '<div class="uap-row"><span class="uap-label">射程</span><span class="uap-value">' + rangeVal + '</span></div>';
+    } else {
+      html += '<div class="uap-empty">属性数据不可用</div>';
+    }
+  });
+
+  body.innerHTML = html;
 }
 
 // ===== 作战日志：往对应侧推送一条信息 =====
@@ -237,6 +448,87 @@ function clearCombatLog() {
   if (logB) logB.innerHTML = '';
 }
 
+// ==================== ScoreboardService ====================
+// 计分板服务：封装全局 Scoreboard 及相关计分板函数的访问接口
+// 内部仍调用全局函数，保持向后兼容
+var ScoreboardService = {
+  // ===== 记录接口 =====
+
+  // 记录伤害（委托给全局 recordScoreboardDamage）
+  recordDamage: function(pieceKey, dmg) {
+    if (typeof recordScoreboardDamage === 'function') {
+      recordScoreboardDamage(pieceKey, dmg);
+    }
+  },
+
+  // 记录击杀（委托给全局 recordScoreboardKill）
+  recordKill: function(pieceKey) {
+    if (typeof recordScoreboardKill === 'function') {
+      recordScoreboardKill(pieceKey);
+    }
+  },
+
+  // 归档溃散单位的计分数据（委托给全局 archiveRoutedPiece）
+  archiveRouted: function(pieceKey) {
+    if (typeof archiveRoutedPiece === 'function') {
+      archiveRoutedPiece(pieceKey);
+    }
+  },
+
+  // ===== 控制接口 =====
+
+  // 重置计分板（委托给全局 resetScoreboard）
+  reset: function() {
+    if (typeof resetScoreboard === 'function') {
+      resetScoreboard();
+    }
+  },
+
+  // 更新计分板UI（委托给全局 updateScoreboardUI）
+  updateUI: function() {
+    if (typeof updateScoreboardUI === 'function') {
+      updateScoreboardUI();
+    }
+  },
+
+  // ===== 作战日志接口 =====
+
+  // 添加作战日志（委托给全局 addCombatLog）
+  addLog: function(team, text, type) {
+    if (typeof addCombatLog === 'function') {
+      addCombatLog(team, text, type);
+    }
+  },
+
+  // 清空作战日志（委托给全局 clearCombatLog）
+  clearLog: function() {
+    if (typeof clearCombatLog === 'function') {
+      clearCombatLog();
+    }
+  },
+
+  // ===== 读取接口 =====
+
+  // 返回当前计分板数据 {damage, kills, routedArchive}
+  getStats: function() {
+    return {
+      damage: Scoreboard.damage,
+      kills: Scoreboard.kills,
+      routedArchive: Scoreboard.routedArchive
+    };
+  },
+
+  // 返回指定队伍总伤害
+  getDamage: function(team) {
+    return (Scoreboard.damage && Scoreboard.damage[team]) || 0;
+  },
+
+  // 返回指定队伍总击杀
+  getKills: function(team) {
+    return (Scoreboard.kills && Scoreboard.kills[team]) || 0;
+  }
+};
+
 function recordScoreboardDamage(pieceKey, dmg) {
   var p = placedPieces[pieceKey];
   if (!p) return;
@@ -258,558 +550,11 @@ function battleDelay(ms) {
   return ms / BATTLE_SPEED_MULT;
 }
 
-// ===== 全新部署算法（基于有效距离和AI性格）=====
-
-// 计算部署后有效距离（攻击距离 + 移动距离）
-function getEffectiveRange(ud) {
-  if (!ud || typeof computeStats !== 'function') return 1;
-  var st = computeStats(ud);
-  if (!st) return 1;
-  return (st.allowedRange || 1) + (st.movement || 1);
-}
-
-// 获取某阵营备战席中，所有可用单位的信息
-function getAvailableUnits(team) {
-  var benchSelector = (team === 'enemy') ? '#benchRight .bench-slot' : '#benchLeft .bench-slot';
-  var benchSlots = document.querySelectorAll(benchSelector);
-  var available = [];
-  for (var i = 0; i < benchSlots.length; i++) {
-    if (!benchSlots[i].classList.contains('empty')) {
-      var ut = benchSlots[i].dataset.unitType;
-      var ud = (typeof unitDefByType === 'function') ? unitDefByType(ut) : null;
-      if (!ud) continue;
-      var isRanged = false;
-      if (ud.equipment && ud.equipment.mainWeapon && typeof ED !== 'undefined' && ED && ED.weapons) {
-        var _depWpn = ED.weapons.find(function(w) { return w.id === ud.equipment.mainWeapon; });
-        if (_depWpn && (_depWpn.type === 'bow' || _depWpn.type === 'crossbow')) isRanged = true;
-      }
-      available.push({
-        slotIdx: parseInt(benchSlots[i].dataset.slotIdx),
-        unitType: ut,
-        isRanged: isRanged,
-        ud: ud,
-        effectiveRange: getEffectiveRange(ud),
-        baseType: ud.type || 'infantry'
-      });
-    }
-  }
-  return available;
-}
-
-// 按有效距离排序（远程优先）
-function sortByEffectiveRange(units) {
-  return units.slice().sort(function(a, b) {
-    // 远程优先
-    if (a.isRanged && !b.isRanged) return -1;
-    if (!a.isRanged && b.isRanged) return 1;
-    // 同是远程或同是近战，按有效距离排序
-    return b.effectiveRange - a.effectiveRange;
-  });
-}
-
-// 找到两个六角格之间的位置（在连线上，尽量靠近中间）
-function findPositionBetween(hexA, hexB, cands) {
-  // 简化实现：找到距A和B距离之和最小的位置
-  var best = null;
-  var bestSum = Infinity;
-  for (var i = 0; i < cands.length; i++) {
-    var c = cands[i].hex;
-    var distA = hDist(c, hexA);
-    var distB = hDist(c, hexB);
-    var sum = distA + distB;
-    // 优先选择距A和B都较近的位置（在连线上）
-    if (sum < bestSum && distA <= 2 && distB <= 2) {
-      bestSum = sum;
-      best = cands[i];
-    }
-  }
-  return best;
-}
-
-// 找到靠近某位置的位置（在候选格中）
-function findPositionNear(targetHex, cands, maxDist) {
-  var best = null;
-  var bestDist = maxDist + 1;
-  for (var i = 0; i < cands.length; i++) {
-    var d = hDist(cands[i].hex, targetHex);
-    if (d < bestDist) {
-      bestDist = d;
-      best = cands[i];
-    }
-  }
-  return best;
-}
-
-// 判断某位置是否在敌方攻击范围内
-function isInEnemyRange(hex, oppHexes, oppUnits) {
-  for (var i = 0; i < oppHexes.length; i++) {
-    var oppUD = oppUnits && oppUnits[i] ? oppUnits[i].ud : null;
-    var oppRange = oppUD ? getEffectiveRange(oppUD) : 2;
-    if (hDist(hex, oppHexes[i]) <= oppRange) return true;
-  }
-  return false;
-}
-
-// ===== 全新部署算法（基于有效距离和AI性格）=====
-// 核心思路：远程优先，根据AI性格调整策略
-
-function aiDeployPiece() {
-  var team = TurnState.currentPlayer;
-  if (TurnState.phase !== 'deploy') return;
-  if (!isControlledByAI(team)) return;
-
-  var isFirstPlayer = (team === TurnState.firstPlayer);
-  var deployCount = TurnState.deployCount[team] || 0;
-  var totalCount = (team === 'enemy') ? TurnState.totalEnemy : TurnState.totalPlayer;
-  var personality = TurnState._aiPersonality[team] || 'balanced';
-  if (TurnState.deployCount[team] >= totalCount) { tryEndDeploy(); return; }
-
-  // 获取可用单位
-  var available = getAvailableUnits(team);
-  if (available.length === 0) { tryEndDeploy(); return; }
-
-  // 根据先手/后手和AI性格选择单位
-  var pick = null;
-  if (isFirstPlayer) {
-    // 先手方：远程优先
-    pick = selectUnitForFirstPlayer(team, available, deployCount, personality);
-  } else {
-    // 后手方：根据AI性格
-    pick = selectUnitForSecondPlayer(team, available, deployCount, personality);
-  }
-
-  if (!pick) {
-    pick = available[Math.floor(Math.random() * available.length)];
-  }
-
-  var slotIdx = pick.slotIdx;
-  var unitType = pick.unitType;
-  var isRanged = pick.isRanged;
-
-  // 收集候选格子
-  var cands = collectCandidateHexes(team);
-  if (cands.length === 0) return;
-
-  // 选择最佳位置
-  var selected = selectBestPosition(team, pick, cands, isFirstPlayer, deployCount, personality);
-  if (!selected) {
-    selected = cands[Math.floor(Math.random() * cands.length)];
-  }
-
-  // 放置单位
-  var h = selected.hex;
-  var key = selected.key;
-  placedPieces[key] = { unitType: unitType, team: team, slotIdx: slotIdx, hex: { q: h.q, r: h.r, s: h.s } };
-  placedPieces[key]._facing = getFacingToCenter(h);
-  initPieceRuntimeState(placedPieces[key]);
-  benchState[slotIdx] = false;
-  var benchSelector = (team === 'enemy') ? '#benchRight .bench-slot' : '#benchLeft .bench-slot';
-  var benchSlots = document.querySelectorAll(benchSelector);
-  benchSlots[getSlotIndexInContainer(benchSlots, slotIdx)].classList.add('empty');
-  TurnState.deployCount[team]++;
-  requestRender();
-  nextDeployPlayer();
-}
-
-// 为先手方选择单位（远程优先）
-function selectUnitForFirstPlayer(team, available, deployCount, personality) {
-  // 第一只部队：选择远程部队中有效距离最高的
-  if (deployCount === 0) {
-    var rangedUnits0 = available.filter(function(u) { return u.isRanged; });
-    if (rangedUnits0.length > 0) {
-      rangedUnits0.sort(function(a, b) { return b.effectiveRange - a.effectiveRange; });
-      return rangedUnits0[0];
-    }
-    // 没有远程部队，选择近战
-    return available[0];
-  }
-
-  // 后续部队：继续放远程，直到远程放完
-  var rangedUnits = available.filter(function(u) { return u.isRanged; });
-  if (rangedUnits.length > 0) {
-    rangedUnits.sort(function(a, b) { return b.effectiveRange - a.effectiveRange; });
-    return rangedUnits[0];
-  }
-
-  // 远程放完，按兵种优先级：近战 > 野兽 > 骑兵 > 飞兵
-  return selectByPriority(available);
-}
-
-// 为后手方选择单位（根据AI性格）
-// 核心修复：所有性格都远程优先，性格差异体现在位置选择上
-// 否则后手方进攻型/防守型不放远程，被先手方远程白嫖致死
-function selectUnitForSecondPlayer(team, available, deployCount, personality) {
-  // 所有性格第一只部队都优先放远程（B1也需要远程对射能力）
-  if (deployCount === 0) {
-    var ranged0 = available.filter(function(u) { return u.isRanged; });
-    if (ranged0.length > 0) {
-      ranged0.sort(function(a, b) { return b.effectiveRange - a.effectiveRange; });
-      return ranged0[0];
-    }
-    return available[0];
-  }
-
-  // 后续部队：所有性格都远程优先，远程放完后按性格选近战
-  var rangedUnits = available.filter(function(u) { return u.isRanged; });
-  if (rangedUnits.length > 0) {
-    rangedUnits.sort(function(a, b) { return b.effectiveRange - a.effectiveRange; });
-    return rangedUnits[0];
-  }
-
-  // 远程放完，按性格选近战
-  if (personality === 'offensive') {
-    // 进攻型：优先骑兵/飞兵（高机动切入）
-    var mobileUnits = available.filter(function(u) {
-      return u.baseType === 'cavalry' || u.baseType === 'flying';
-    });
-    if (mobileUnits.length > 0) return mobileUnits[0];
-  } else if (personality === 'defensive') {
-    // 防守型：优先步兵/野兽（构筑防线）
-    var meleeUnits = available.filter(function(u) {
-      return u.baseType === 'infantry' || u.baseType === 'beast';
-    });
-    if (meleeUnits.length > 0) return meleeUnits[0];
-  }
-  // 均衡型或兜底：按优先级选
-  return selectByPriority(available);
-}
-
-// 按兵种优先级选择（近战 > 骑兵 > 飞兵 > 野兽）
-function selectByPriority(available) {
-  var priority = ['infantry', 'beast', 'cavalry', 'flying'];
-  for (var i = 0; i < priority.length; i++) {
-    var units = available.filter(function(u) { return u.baseType === priority[i]; });
-    if (units.length > 0) return units[0];
-  }
-  return available[0];
-}
-
-// 收集候选格子
-function collectCandidateHexes(team) {
-  var oppHexes = [];
-  var myHexes = [];
-  for (var k in placedPieces) {
-    var p = placedPieces[k];
-    if (p.team === team) {
-      myHexes.push(p.hex);
-    } else {
-      oppHexes.push(p.hex);
-    }
-  }
-
-  var cands = [];
-  hexes.forEach(function(h) {
-    var key = h.q + ',' + h.r + ',' + h.s;
-    if (placedPieces[key]) return;
-    // 中心一环以内禁止放置
-    if (hDist(h, {q:0,r:0,s:0}) <= 1) return;
-    // 地形阻挡（山脉/湖泊）禁止放置
-    if (typeof isTerrainBlocked === 'function' && isTerrainBlocked(h)) return;
-
-    // 检查是否在敌方 2 格内
-    var inEnemyRange = false;
-    for (var oi = 0; oi < oppHexes.length; oi++) {
-      if (hDist(h, oppHexes[oi]) <= 2) {
-        inEnemyRange = true;
-        break;
-      }
-    }
-
-    // 如果在敌方 2 格内，检查是否在己方 2 格内（例外规则）
-    if (inEnemyRange) {
-      var inAllyRange = false;
-      for (var aj = 0; aj < myHexes.length; aj++) {
-        if (hDist(h, myHexes[aj]) <= 2) {
-          inAllyRange = true;
-          break;
-        }
-      }
-      if (!inAllyRange) return; // 在敌方 2 格内且不在己方 2 格内，排除
-    }
-
-    cands.push({ key: key, hex: h });
-  });
-
-  return cands;
-}
-
-// 选择最佳位置（全新部署算法核心）
-function selectBestPosition(team, pick, cands, isFirstPlayer, deployCount, personality) {
-  if (cands.length === 0) return null;
-  personality = personality || 'balanced';
-
-  // 收集己方和敌方单位坐标
-  var myHexes = [];
-  var oppHexes = [];
-  for (var k in placedPieces) {
-    if (placedPieces[k].team === team) {
-      myHexes.push(placedPieces[k].hex);
-    } else {
-      oppHexes.push(placedPieces[k].hex);
-    }
-  }
-
-  // ===== A1放置：先手方第一只部队放在二环或三环 =====
-  if (isFirstPlayer && deployCount === 0) {
-    var ring2or3 = cands.filter(function(c) {
-      var d = hDist(c.hex, {q:0,r:0,s:0});
-      return d >= 2 && d <= 3;
-    });
-    if (ring2or3.length > 0) {
-      return ring2or3[Math.floor(Math.random() * ring2or3.length)];
-    }
-  }
-
-  // ===== B1放置：后手方第一只部队放在A1的对称方向 =====
-  if (!isFirstPlayer && deployCount === 0 && oppHexes.length > 0) {
-    var a1 = oppHexes[0];
-    var a1Piece = null;
-    for (var ak in placedPieces) {
-      if (placedPieces[ak].team !== team) { a1Piece = placedPieces[ak]; break; }
-    }
-    var a1UD = a1Piece ? (typeof unitDefByType === 'function' ? unitDefByType(a1Piece.unitType) : null) : null;
-    var a1EffRange = a1UD ? getEffectiveRange(a1UD) : 3;
-    var symHex = { q: -a1.q, r: -a1.r, s: -a1.s };
-
-    // 第一优先：离对称位置最近，且不在A1有效距离内
-    var bestSym = null;
-    var bestSymDist = Infinity;
-    for (var si = 0; si < cands.length; si++) {
-      var dToSym = hDist(cands[si].hex, symHex);
-      var dToA1 = hDist(cands[si].hex, a1);
-      if (dToA1 > a1EffRange && dToSym < bestSymDist) {
-        bestSymDist = dToSym;
-        bestSym = cands[si];
-      }
-    }
-    if (bestSym) return bestSym;
-
-    // 第二优先（兜底）：所有候选都在A1有效距离内时，选离A1最远的
-    var farthest = null;
-    var farthestDist = -1;
-    for (var fi2 = 0; fi2 < cands.length; fi2++) {
-      var fd = hDist(cands[fi2].hex, a1);
-      if (fd > farthestDist) { farthestDist = fd; farthest = cands[fi2]; }
-    }
-    if (farthest) return farthest;
-
-    // 第三优先（终极兜底）：随机选一个
-    return cands[Math.floor(Math.random() * cands.length)];
-  }
-
-  // ===== 防御机制：检测敌方与己方间隔2格(hDist==3)时触发 =====
-  var defensePos = checkDefenseTrigger(pick, cands, myHexes, oppHexes);
-  if (defensePos) return defensePos;
-
-  // ===== 进攻型第二只远程前置 =====
-  if (isFirstPlayer && deployCount === 2 && personality === 'offensive' && pick.isRanged && myHexes.length > 0) {
-    var a1Pos = myHexes[0];
-    var bestForward = null;
-    var bestFwdScore = -Infinity;
-    for (var fwi = 0; fwi < cands.length; fwi++) {
-      var fc = cands[fwi];
-      var dToA1 = hDist(fc.hex, a1Pos);
-      if (dToA1 > 4) continue; // 不远离第一只部队
-      // 靠近敌方
-      var minDistE = Infinity;
-      for (var fwj = 0; fwj < oppHexes.length; fwj++) {
-        var fde = hDist(fc.hex, oppHexes[fwj]);
-        if (fde < minDistE) minDistE = fde;
-      }
-      // 抱团加分
-      var fwdAlly = 0;
-      for (var fwa = 0; fwa < myHexes.length; fwa++) {
-        if (hDist(fc.hex, myHexes[fwa]) <= 2) fwdAlly++;
-      }
-      var fwdScore = fwdAlly * 5 - minDistE * 2;
-      if (fwdScore > bestFwdScore) { bestFwdScore = fwdScore; bestForward = fc; }
-    }
-    if (bestForward) return bestForward;
-  }
-
-  // ===== 通用策略：抱团为主，根据AI性格调整 =====
-  var best = null;
-  var bestScore = -Infinity;
-  for (var i = 0; i < cands.length; i++) {
-    var c = cands[i];
-    var score = 0;
-
-    // ===== 小团制部署：三个三个抱团，团间间隔1格，避免互相卡位 =====
-    var allyIn1 = 0;  // 1格内友军数（团内）
-    var allyIn2 = 0;  // 2格内友军数（含邻团）
-    for (var j = 0; j < myHexes.length; j++) {
-      var d = hDist(c.hex, myHexes[j]);
-      if (d <= 1) allyIn1++;
-      if (d <= 2) allyIn2++;
-    }
-    if (allyIn1 >= 3) {
-      // 当前位置1格内已有3个友军 → 团已满，不要再挤进去
-      score -= 30;
-    } else if (allyIn1 >= 1) {
-      // 1格内有1-2个友军 → 继续在团内放置
-      score += allyIn1 * 15;
-    } else if (allyIn2 >= 1) {
-      // 1格内没有友军，但2格内有 → 开新团，间隔1格
-      score += 12;
-    } else {
-      // 2格内都没有友军 → 太远，降分
-      score -= 20;
-    }
-
-    // 远程部队：尽量放在能打到敌方的位置
-    if (pick.isRanged && oppHexes.length > 0) {
-      var reachable = 0;
-      for (var oj = 0; oj < oppHexes.length; oj++) {
-        if (hDist(c.hex, oppHexes[oj]) <= pick.effectiveRange) reachable++;
-      }
-      score += reachable * 5;
-    }
-
-    // 后手方根据AI性格调整位置偏好
-    if (!isFirstPlayer && oppHexes.length > 0) {
-      var a1Pos2 = oppHexes[0]; // 对方先手第一个单位
-      var dToA1 = hDist(c.hex, a1Pos2);
-
-      if (personality === 'offensive') {
-        // 进攻型：靠近A1，试图切入
-        score += Math.max(0, 10 - dToA1) * 2;
-      } else if (personality === 'defensive') {
-        // 防守型：远离敌方，抱团构筑防线
-        var minDistE = Infinity;
-        for (var dj = 0; dj < oppHexes.length; dj++) {
-          var de = hDist(c.hex, oppHexes[dj]);
-          if (de < minDistE) minDistE = de;
-        }
-        if (minDistE >= 3) score += 5;
-        if (pick.isRanged && minDistE >= 4) score += 5; // 远程更靠后
-      } else {
-        // 均衡型：抱团为主，远程尝试打到敌方
-        if (pick.isRanged) {
-          var reach2 = 0;
-          for (var ej = 0; ej < oppHexes.length; ej++) {
-            if (hDist(c.hex, oppHexes[ej]) <= pick.effectiveRange) reach2++;
-          }
-          score += reach2 * 3;
-        }
-      }
-    }
-
-    // ===== 兵种位置偏好（防止高机动部队突进太快被集火）=====
-    if (pick.baseType === 'cavalry' || pick.baseType === 'flying') {
-      // 高机动部队（骑兵/飞兵）：不要放在最前排，应该保护侧翼
-      // 计算离敌方最近距离
-      var minDistE2 = Infinity;
-      for (var ce = 0; ce < oppHexes.length; ce++) {
-        var de2 = hDist(c.hex, oppHexes[ce]);
-        if (de2 < minDistE2) minDistE2 = de2;
-      }
-      // 如果离敌方太近（<=2），扣分（不要突进太快）
-      if (minDistE2 <= 2) score -= 25;
-      // 如果离友军太远（>3），扣分（不要脱离大部队）
-      var minDistA = Infinity;
-      for (var ca = 0; ca < myHexes.length; ca++) {
-        var da2 = hDist(c.hex, myHexes[ca]);
-        if (da2 < minDistA) minDistA = da2;
-      }
-      if (myHexes.length > 0 && minDistA > 3) score -= 20;
-      // 如果离敌方适中（3-4格），加分（保护侧翼，不突进）
-      if (minDistE2 >= 3 && minDistE2 <= 4) score += 10;
-    } else if (pick.baseType === 'infantry' || pick.baseType === 'beast') {
-      // 低机动部队（步兵/野兽）：可以放在前排构筑防线
-      // 如果是防守型，放在前面（离敌方2-3格）
-      if (personality === 'defensive' && oppHexes.length > 0) {
-        var minDistE3 = Infinity;
-        for (var de = 0; de < oppHexes.length; de++) {
-          var de3 = hDist(c.hex, oppHexes[de]);
-          if (de3 < minDistE3) minDistE3 = de3;
-        }
-        // 离敌方适中（2-3格），既不太近也不太远
-        if (minDistE3 >= 2 && minDistE3 <= 3) score += 15;
-      }
-    }
-    // 远程部队：已经在前面处理了（尽量放在能打到敌方的位置）
-
-    if (score > bestScore) {
-      bestScore = score;
-      best = c;
-    }
-  }
-
-  return best;
-}
-
-// ===== 防御机制检测：敌方与己方间隔2格(hDist==3)时触发 =====
-// 调整：只在敌方是高机动部队（骑兵/飞兵）或有效距离≥3时才触发，避免过度敏感
-function checkDefenseTrigger(pick, cands, myHexes, oppHexes) {
-  if (myHexes.length === 0 || oppHexes.length === 0) return null;
-
-  for (var i = 0; i < myHexes.length; i++) {
-    for (var j = 0; j < oppHexes.length; j++) {
-      if (hDist(myHexes[i], oppHexes[j]) === 3) {
-        // 获取敌方单位信息，判断是否构成实际威胁
-        var oppPiece = null;
-        for (var pk in placedPieces) {
-          if (placedPieces[pk].hex.q === oppHexes[j].q &&
-              placedPieces[pk].hex.r === oppHexes[j].r &&
-              placedPieces[pk].hex.s === oppHexes[j].s) {
-            oppPiece = placedPieces[pk];
-            break;
-          }
-        }
-        var oppUD = oppPiece ? (typeof unitDefByType === 'function' ? unitDefByType(oppPiece.unitType) : null) : null;
-        var oppEffRange = oppUD ? getEffectiveRange(oppUD) : 2;
-
-        // 只在敌方有效距离≥3（能一回合打到己方）时才触发防御
-        if (oppEffRange < 3) continue;
-
-        var myUnit = myHexes[i];
-        var oppUnit = oppHexes[j];
-        var isCavalry = (pick.baseType === 'cavalry' || pick.baseType === 'flying');
-        var isInfantry = (pick.baseType === 'infantry' || pick.baseType === 'beast');
-
-        if (isCavalry) {
-          var pos = findPositionOnLine(myUnit, oppUnit, cands, true);
-          if (pos) return pos;
-        } else if (isInfantry) {
-          var pos2 = findPositionOnLine(myUnit, oppUnit, cands, false);
-          if (pos2) return pos2;
-        }
-      }
-    }
-  }
-  return null;
-}
-
-// 在两个六角格之间的连线上找位置
-// hexA是己方单位，hexB是敌方单位
-// nearA=true时靠近hexA（保护己方），nearA=false时靠近hexB（阻挡敌方）
-function findPositionOnLine(hexA, hexB, cands, nearA) {
-  var best = null;
-  var bestScore = -Infinity;
-  for (var i = 0; i < cands.length; i++) {
-    var c = cands[i];
-    var dA = hDist(c.hex, hexA);
-    var dB = hDist(c.hex, hexB);
-    // 必须在两者之间（距离都不超过3）
-    if (dA > 3 || dB > 3) continue;
-    var score;
-    if (nearA) {
-      score = (4 - dA) * 3 + (4 - dB); // 偏向靠近A
-    } else {
-      score = (4 - dB) * 3 + (4 - dA); // 偏向靠近B
-    }
-    if (score > bestScore) {
-      bestScore = score;
-      best = c;
-    }
-  }
-  return best;
-}
-
 function updateBattleSpeedControlsVisibility() {
   var ctrl = document.getElementById('battleSpeedControls');
   if (!ctrl) return;
-  ctrl.style.display = TurnState.isDuelBattle ? 'flex' : 'none';
+  // 速度控件在所有对战模式的战斗阶段都显示（玩家可控制AI动画速度）
+  ctrl.style.display = TurnState.phase === 'battle' ? 'flex' : 'none';
   // 更新按钮高亮
   var btns = ctrl.querySelectorAll('.speed-btn');
   btns.forEach(function(b) {
@@ -915,6 +660,8 @@ function initSpectatorPauseBtn() {
 
 // 暂停/继续（供按钮点击和键盘T键调用）
 function toggleSpectatorPause() {
+  // 仅斗蛐蛐模式允许暂停
+  if (!TurnState.isDuelBattle) return;
   if (_spectatorPaused) {
     // 从暂停恢复：先取消可能存在的倒计时
     cancelCountdown();
@@ -946,10 +693,18 @@ function initTurns() {
   TurnState.totalPlayer = 0;
   TurnState.totalEnemy = 0;
   TurnState._aiTurnActive = false;
+  // 重置观战暂停状态（防止上一场斗蛐蛐模式的暂停状态残留到下一场）
+  _spectatorPaused = false;
+  _deployPauseInitial = false;
+  // 重置斗蛐蛐边对分配，确保每场新对战随机选择新的对称边
+  _duelEdgeAssignment = null;
   // 重置地形，防止上一场战斗的地形残留
   if (typeof resetTerrain === 'function') resetTerrain();
   document.getElementById('turnStatus').style.display = 'none';
   document.getElementById('warReport').style.display = 'none';
+  // 隐藏速度控件（非战斗阶段）
+  var speedCtrl = document.getElementById('battleSpeedControls');
+  if (speedCtrl) speedCtrl.style.display = 'none';
 }
 
 // ===== 判断某阵营是否由 AI 控制 =====
@@ -1001,9 +756,6 @@ function rollDiceAndStart() {
   if (isControlledByAI('enemy')) {
     TurnState._aiPersonality['enemy'] = (presetPersB && presetPersB !== 'random') ? presetPersB : weightedRandom(types, weights);
   }
-  if (console && console.log) {
-    console.log('[AI性格] player=' + (TurnState._aiPersonality['player'] || '人类') + ' enemy=' + (TurnState._aiPersonality['enemy'] || '人类'));
-  }
 
   var benchSlotsLeft = document.querySelectorAll('#benchLeft .bench-slot');
   var benchSlotsRight = document.querySelectorAll('#benchRight .bench-slot');
@@ -1011,6 +763,15 @@ function rollDiceAndStart() {
   TurnState.totalEnemy = 0;
   benchSlotsLeft.forEach(function(s) { if (!s.classList.contains('empty')) TurnState.totalPlayer++; });
   benchSlotsRight.forEach(function(s) { if (!s.classList.contains('empty')) TurnState.totalEnemy++; });
+
+  // 防御性检查：双方都没有棋子时给出提示，避免直接跳过部署阶段
+  if (TurnState.totalPlayer === 0 && TurnState.totalEnemy === 0) {
+    if (typeof showToast === 'function') {
+      showToast('备战席为空，请检查部队配置', 'error');
+    }
+    TurnState.phase = 'dice';
+    return;
+  }
 
   showDiceResult(playerRoll, enemyRoll);
   updateDeployUI();
@@ -1045,58 +806,6 @@ function showDiceResult(playerRoll, enemyRoll) {
   var isPlayerFirst = TurnState.firstPlayer === 'player';
   var msg = '🎲 掷骰结果\n\n' + sideALabel + ' 「' + sideAName + '」 ' + s1[playerRoll] + ' ' + playerRoll + '点\n' + sideBLabel + ' 「' + sideBName + '」 ' + s1[enemyRoll] + ' ' + enemyRoll + '点\n\n' + (isPlayerFirst ? ('🏆 ' + sideALabel + '先手！') : ('🏆 ' + sideBLabel + '先手！'));
   alert(msg);
-}
-
-// ===== 放置阶段 =====
-function updateDeployUI() {
-  var panel = document.getElementById('turnStatus');
-  if (TurnState.phase !== 'deploy') { panel.style.display = 'none'; return; }
-  var sideLabel;
-  if (TurnState.isDuelBattle) {
-    sideLabel = TurnState.currentPlayer === 'player' ? '甲方' : '乙方';
-  } else {
-    sideLabel = TurnState.currentPlayer === 'player' ? '我方' : '敌方';
-  }
-  var who = (TurnState.currentPlayer === 'player' ? '🔷 ' : '🔶 ') + sideLabel + '放置';
-  var d = TurnState.deployCount;
-  var dl = { easy: '简单', hard: '困难', legend: '传说' }[TurnState.difficulty] || '简单';
-  var deployInfo;
-  if (TurnState.isDuelBattle) {
-    deployInfo = '<span style="font-size:11px;color:#6b4c2a">甲方 ' + d.player + '/' + TurnState.totalPlayer + ' | 乙方 ' + d.enemy + '/' + TurnState.totalEnemy + '</span> ';
-  } else {
-    deployInfo = '<span style="font-size:11px;color:#6b4c2a">我方 ' + d.player + '/' + TurnState.totalPlayer + ' | 敌方 ' + d.enemy + '/' + TurnState.totalEnemy + '</span> ';
-  }
-  panel.innerHTML = '<span style="font-weight:bold">📦 部署阶段 — ' + who + '（难度：' + dl + '）</span> ' +
-    deployInfo +
-    '<span style="font-size:10px;color:#8b2500">中心一环及敌方2格内禁止放置</span>';
-  panel.style.display = 'flex';
-  if (isControlledByAI(TurnState.currentPlayer)) { setTimeout(aiDeployPiece, battleDelay(500)); }
-}
-
-function getSlotIndexInContainer(container, slotIdx) {
-  for (var i = 0; i < container.length; i++) { if (parseInt(container[i].dataset.slotIdx) === slotIdx) return i; }
-  return 0;
-}
-
-function onPlayerPlacePiece() {
-  if (TurnState.phase !== 'deploy') return;
-  if (isControlledByAI(TurnState.currentPlayer)) return; // AI 方不接受人类放置
-  TurnState.deployCount[TurnState.currentPlayer]++;
-  requestRender();
-  nextDeployPlayer();
-}
-
-function nextDeployPlayer() {
-  if (TurnState.deployCount.player >= TurnState.totalPlayer && TurnState.deployCount.enemy >= TurnState.totalEnemy) { startBattlePhase(); return; }
-  if (TurnState.currentPlayer === 'player') TurnState.currentPlayer = 'enemy'; else TurnState.currentPlayer = 'player';
-  if (TurnState.currentPlayer === 'player' && TurnState.deployCount.player >= TurnState.totalPlayer) { nextDeployPlayer(); return; }
-  if (TurnState.currentPlayer === 'enemy' && TurnState.deployCount.enemy >= TurnState.totalEnemy) { nextDeployPlayer(); return; }
-  updateDeployUI();
-}
-
-function tryEndDeploy() {
-  if (TurnState.deployCount.player >= TurnState.totalPlayer && TurnState.deployCount.enemy >= TurnState.totalEnemy) startBattlePhase();
-  else nextDeployPlayer();
 }
 
 // ===== 战斗阶段 =====
@@ -1167,6 +876,9 @@ function processTurnStart(team) {
         addPieceStatus(p, 'surrounded', Infinity, '⚑', '#ff6600');
       }
       addWarReportLine('[包围] ' + udName + ' 被三面以上敌军包围，士气-5！');
+      if (typeof showDamageNumber === 'function') {
+        showDamageNumber(p.hex, '被包围!', 'crit');
+      }
     } else if (!isSurrounded && wasSurrounded) {
       // 脱离包围：移除debuff，士气+5（恢复）
       p._currentMorale = Math.min(100, (p._currentMorale || 0) + 5);
@@ -1420,43 +1132,15 @@ function showKillNotify(atkName, defName) {
   }
 }
 
+// 兼容包装：实际实现已迁移到 BattleService.js 的 computePieceStats
 function getPieceStats(piece) {
-  var ud = unitDefByType(piece.unitType);
-  if (!ud) return null;
-  var st = computeStats(ud);
-  if (!st) return null;
-  st.baseType = ud.baseType || ud.type;
-  if (piece._currentHP !== undefined) st.totalHP = piece._currentHP;
-  if (piece._currentCount !== undefined) st.unitCount = piece._currentCount;
-  if (piece._currentMorale !== undefined) st.morale = piece._currentMorale;
-  st.hpPerUnit = (piece._currentHP && piece._currentCount)
-    ? Math.ceil(piece._currentHP / piece._currentCount) : st.hpPerUnit;
-  return st;
+  if (typeof computePieceStats === 'function') {
+    return computePieceStats(piece);
+  }
+  return null;
 }
 
-function initPieceRuntimeState(piece) {
-  var ud = unitDefByType(piece.unitType);
-  if (!ud) return;
-  var st = computeStats(ud);
-  if (!st) return;
-  piece._currentHP = st.totalHP;
-  piece._currentCount = ud.unitCount;
-  piece._currentMorale = st.morale;
-  piece._initialHP = st.totalHP;
-  piece._initialCount = ud.unitCount;
-  piece._initialMorale = st.morale;
-  piece._routed = false;
-  piece._actionUsedThisTurn = false;
-  piece._attackedThisTick = false;
-  piece._wasAttackedThisTurn = false;
-  // 朝向：默认朝右，放置时会根据位置重新计算
-  piece._facing = piece._facing !== undefined ? piece._facing : 0;
-  // 状态系统
-  piece._statuses = piece._statuses || {};
-  // 记分板：每个棋子独立追踪伤害和击杀
-  piece._damageDealt = 0;
-  piece._kills = 0;
-}
+// initPieceRuntimeState 的实现已迁移到 BattleService.js（同名全局函数），此处不再重复定义
 
 // ===== 战斗键盘快捷键（仅在战斗进行时生效）=====
 // 0→0.5x  1→1x  2→2x  3→3x  T→暂停/继续
@@ -1508,6 +1192,17 @@ function initPieceRuntimeState(piece) {
       e.preventDefault();
       toggleSpectatorPause();
       return;
+    }
+
+    // 结束回合快捷键：Enter（仅玩家回合且非斗蛐蛐观战模式）
+    if (key === 'Enter') {
+      if (typeof TurnState !== 'undefined' && TurnState.phase === 'battle' && TurnState.currentPlayer === 'player') {
+        if (!TurnState.isDuelBattle) {
+          e.preventDefault();
+          endTurn();
+          return;
+        }
+      }
     }
   });
 

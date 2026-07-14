@@ -205,6 +205,106 @@
       "typeName": "野兽步兵",
       "unitCount": 80,
       "equipment": { "mainWeapon": null, "shield": null, "armor": "A018", "mount": null }
+    },
+    {
+      "id": "ED01",
+      "tier": "bronze",
+      "name": "精灵长矛护卫",
+      "race": { "id": "elf", "name": "精灵族" },
+      "type": "infantry",
+      "typeName": "步兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W024", "shield": null, "armor": "A019", "mount": null }
+    },
+    {
+      "id": "ED02",
+      "tier": "bronze",
+      "name": "精灵游侠",
+      "race": { "id": "elf", "name": "精灵族" },
+      "type": "archer",
+      "typeName": "远程兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W025", "shield": null, "armor": "A004", "mount": null }
+    },
+    {
+      "id": "ED03",
+      "tier": "bronze",
+      "name": "精灵风骑兵",
+      "race": { "id": "elf", "name": "精灵族" },
+      "type": "cavalry",
+      "typeName": "骑兵",
+      "unitCount": 40,
+      "equipment": { "mainWeapon": "W009", "shield": "S006", "armor": "A019", "mount": "M003" }
+    },
+    {
+      "id": "ED04",
+      "tier": "bronze",
+      "name": "精灵剑舞者",
+      "race": { "id": "elf", "name": "精灵族" },
+      "type": "infantry",
+      "typeName": "步兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W009", "shield": "S006", "armor": "A004", "mount": null }
+    },
+    {
+      "id": "ED05",
+      "tier": "bronze",
+      "name": "精灵鹰射手",
+      "race": { "id": "elf", "name": "精灵族" },
+      "type": "archer",
+      "typeName": "远程兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W004", "shield": null, "armor": "A004", "mount": null }
+    },
+    {
+      "id": "EE01",
+      "tier": "bronze",
+      "name": "暗裔重装战士",
+      "race": { "id": "darkborn", "name": "暗裔" },
+      "type": "infantry",
+      "typeName": "步兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W026", "shield": "S007", "armor": "A020", "mount": null }
+    },
+    {
+      "id": "EE02",
+      "tier": "bronze",
+      "name": "暗裔弩手",
+      "race": { "id": "darkborn", "name": "暗裔" },
+      "type": "archer",
+      "typeName": "远程兵",
+      "unitCount": 160,
+      "equipment": { "mainWeapon": "W027", "shield": null, "armor": "A015", "mount": null }
+    },
+    {
+      "id": "EE03",
+      "tier": "gold",
+      "name": "暗裔死亡骑士",
+      "race": { "id": "darkborn", "name": "暗裔" },
+      "type": "cavalry",
+      "typeName": "骑兵",
+      "unitCount": 40,
+      "equipment": { "mainWeapon": "W010", "shield": "S007", "armor": "A020", "mount": "M002" }
+    },
+    {
+      "id": "EE04",
+      "tier": "gold",
+      "name": "暗裔巨魔",
+      "race": { "id": "darkborn", "name": "暗裔" },
+      "type": "beast_infantry",
+      "typeName": "野兽步兵",
+      "unitCount": 60,
+      "equipment": { "mainWeapon": "W014", "shield": null, "armor": null, "mount": null }
+    },
+    {
+      "id": "EE05",
+      "tier": "gold",
+      "name": "暗裔怨灵",
+      "race": { "id": "darkborn", "name": "暗裔" },
+      "type": "flying",
+      "typeName": "空军",
+      "unitCount": 20,
+      "equipment": { "mainWeapon": "W013", "shield": null, "armor": "A009", "mount": "M008" }
     }
   ],
   "enemySets": [
@@ -217,17 +317,24 @@
     },
     {
       "id": "setB",
-      "name": "精锐远征",
+      "name": "精灵前哨",
       "tier": "bronze",
-      "difficulty": "hard",
-      "units": ["EB01", "EB02", "EB03"]
+      "difficulty": "medium",
+      "units": ["ED01", "ED02", "ED03", "ED04", "ED05"]
     },
     {
       "id": "setC",
       "name": "王牌压制",
+      "tier": "bronze",
+      "difficulty": "hard",
+      "units": ["EB01", "EB02", "EB03", "EE01", "EE02", "EE03", "EE04"]
+    },
+    {
+      "id": "setD",
+      "name": "终焉联军",
       "tier": "gold",
-      "difficulty": "extreme",
-      "units": ["EC01", "EC02", "EC03"]
+      "difficulty": "legend",
+      "units": ["EC01", "EC02", "EC03", "EE03", "EE05"]
     }
   ],
   "difficulty": {

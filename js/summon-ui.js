@@ -1,109 +1,166 @@
 // AI路径引导：如需查找相关代码路径，请先查阅 AI_PATH_GUIDE.md
 // 每新增/修改一个文件后必须同步更新 AI_PATH_GUIDE.md
-// ==================== 召唤页面UI ====================
+// ==================== 召唤页面UI（仪式殿堂风格）====================
+
+// 六芒星 SVG（正六边形顶点 → 两个等边三角形）
+// 正六边形 r=42, center=(50,50)，6个顶点均布
+// V0(顶) V1(右上) V2(右下) V3(底) V4(左下) V5(左上)
+// 上三角 = V0,V2,V4    下三角 = V1,V3,V5
+function hexagramSVG(size, color, sw) {
+  var s = size || 100;
+  var c = color || '#c9a227';
+  var w = sw || 1.5;
+  var r = 42, cx = 50, cy = 50;
+  var h = r * 0.8660; // cos30°
+  var v0 = cx + ',' + (cy - r);             // (50, 8)
+  var v1 = (cx + h) + ',' + (cy - r/2);     // (86.37, 29)
+  var v2 = (cx + h) + ',' + (cy + r/2);     // (86.37, 71)
+  var v3 = cx + ',' + (cy + r);             // (50, 92)
+  var v4 = (cx - h) + ',' + (cy + r/2);     // (13.63, 71)
+  var v5 = (cx - h) + ',' + (cy - r/2);     // (13.63, 29)
+  return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
+    '<polygon points="' + v0 + ' ' + v2 + ' ' + v4 + '" fill="none" stroke="' + c + '" stroke-width="' + w + '" stroke-linejoin="round"/>' +
+    '<polygon points="' + v1 + ' ' + v3 + ' ' + v5 + '" fill="none" stroke="' + c + '" stroke-width="' + w + '" stroke-linejoin="round"/>' +
+    '<circle cx="50" cy="50" r="2.5" fill="' + c + '"/>' +
+    '</svg>';
+}
 
 function buildSummonPage() {
   var container = document.getElementById('summonContent');
   if (!container) return;
-
   container.innerHTML = '';
 
-  // 积分展示
+  // ===== 积分顶栏 =====
   var pointsBar = document.createElement('div');
-  pointsBar.className = 'summon-points-bar';
+  pointsBar.className = 'smn-points-bar';
   pointsBar.innerHTML =
-    '<div class="smn-icon smn-portal-icon"><div class="sp-ring sp-ring-1"></div><div class="sp-ring sp-ring-2"></div><div class="sp-core"></div><div class="sp-hex"></div></div>' +
-    '<div class="smn-info">' +
-      '<div class="smn-label">我的积分</div>' +
-      '<div class="smn-value" id="summonPoints">' + getPlayerPoints() + '</div>' +
+    '<div class="smn-points-left">' +
+      '<div class="smn-points-icon">' + hexagramSVG(28, '#d4a017', 2) + '</div>' +
+      '<div>' +
+        '<div class="smn-points-label">我 的 积 分</div>' +
+        '<div class="smn-points-value" id="summonPoints">' + getPlayerPoints() + '</div>' +
+      '</div>' +
     '</div>' +
-    '<div class="smn-tip">⚠ 需要先运行 <code>node server.js</code>，AI 生成兵团（名字/装备/背景均由 AI 创作）</div>';
+    '<div class="smn-points-hint">点击商城赚取积分</div>';
   container.appendChild(pointsBar);
 
-  // 玩家自定义描述
-  var customRow = document.createElement('div');
-  customRow.className = 'summon-custom-row';
-  customRow.innerHTML =
-    '<span class="sml-label">✨ 自定义描述（可选）：</span>' +
-    '<input class="sml-input sml-custom-input" id="summonCustomInput" placeholder="例：来自魔兽世界的兽人步兵，手持战斧，狂暴战士风格" ' +
-    'onkeydown="if(event.key===\'Enter\') doSummon(1)">' +
-    '<span class="sml-hint">留空则完全随机生成</span>';
-  container.appendChild(customRow);
+  // ===== 六芒星祭坛 =====
+  var altar = document.createElement('div');
+  altar.className = 'smn-altar';
+  altar.innerHTML =
+    '<div class="smn-altar-ring smn-altar-ring-1"></div>' +
+    '<div class="smn-altar-ring smn-altar-ring-2"></div>' +
+    hexagramSVG(110, '#d4a017', 1.2);
+  container.appendChild(altar);
 
-  // 四档召唤（从SUMMON_TIERS读取，避免硬编码价格错误）
+  // ===== 四档召唤卡片（2x2网格）=====
   var tierMeta = [
-    { tier: 4, name: '💎 钻石召唤', color: TIER_LEVELS.diamond.color },
-    { tier: 3, name: '🟡 黄金召唤', color: '#ffd700' },
-    { tier: 2, name: '🟤 青铜召唤', color: '#cd7f32' },
-    { tier: 1, name: '⚫ 黑铁召唤', color: '#4a4a4a' }
+    { tier: 4, name: '钻石召唤', tag: '钻石', desc: '战力 80~130 · 钻石级兵团 · 满编精锐' },
+    { tier: 3, name: '黄金召唤', tag: '黄金', desc: '战力 45~80 · 黄金级兵团 · 攻防兼备' },
+    { tier: 2, name: '青铜召唤', tag: '青铜', desc: '战力 20~45 · 青铜级兵团 · 各有所长' },
+    { tier: 1, name: '黑铁召唤', tag: '黑铁', desc: '战力 5~20 · 黑铁级兵团 · 数量优势' }
   ];
-  var tierDescs = {
-    4: '战力 80~130 · 钻石级兵团 · 满编精锐',
-    3: '战力 45~80 · 黄金级兵团 · 攻防兼备',
-    2: '战力 20~45 · 青铜级兵团 · 各有所长',
-    1: '战力 5~20 · 黑铁级兵团 · 数量优势'
-  };
+
+  var tiersWrap = document.createElement('div');
+  tiersWrap.className = 'smn-tiers';
 
   tierMeta.forEach(function(m) {
     var t = SUMMON_TIERS[m.tier];
-    var card = document.createElement('div');
-    card.className = 'summon-tier-card';
-    card.style.borderColor = m.color;
-    card.style.background = 'rgba(' + (m.tier === 4 ? '0,200,232' : m.tier === 3 ? '255,215,0' : m.tier === 2 ? '205,127,50' : '74,74,74') + ',0.10)';
-
     var canAfford = getPlayerPoints() >= t.cost;
 
+    var card = document.createElement('div');
+    card.className = 'smn-card';
+    card.setAttribute('data-tier', m.tier);
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(16px)';
     card.innerHTML =
-      '<div class="stc-header">' +
-        '<div class="stc-name">' + m.name + '</div>' +
-        '<div class="stc-desc">' + tierDescs[m.tier] + '</div>' +
+      '<div class="smn-card-head">' +
+        '<div class="smn-card-name">' + m.name + '</div>' +
+        '<div class="smn-card-tag">' + m.tag + '</div>' +
       '</div>' +
-      '<div class="stc-body">' +
-        '<div class="stc-price">💎 ' + t.cost + ' 积分</div>' +
-        '<button class="stc-btn ' + (canAfford ? '' : 'disabled') + '" ' + (canAfford ? '' : 'disabled') + ' ' +
+      '<div class="smn-card-desc">' + m.desc + '</div>' +
+      '<div class="smn-card-foot">' +
+        '<div class="smn-card-price">' + t.cost + '<span>积分</span></div>' +
+        '<button class="smn-card-btn ' + (canAfford ? '' : 'disabled') + '" ' +
+          (canAfford ? '' : 'disabled ') +
           'onclick="doSummon(' + m.tier + ')">' +
-          (canAfford ? '召唤！' : '积分不足') +
+          (canAfford ? '召唤' : '不足') +
         '</button>' +
       '</div>';
-
-    container.appendChild(card);
+    tiersWrap.appendChild(card);
   });
 
-  // 历史记录
-  var historyDiv = document.createElement('div');
-  historyDiv.className = 'summon-history';
-  historyDiv.id = 'summonHistory';
-  var historyHtml = '<div class="sh-header">📜 召唤记录</div>';
+  container.appendChild(tiersWrap);
+
+  // 入场动画
+  if (window.gsap) {
+    var cards = tiersWrap.querySelectorAll('.smn-card');
+    gsap.to(cards, { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, delay: 0.2, ease: 'power2.out' });
+    var altarEl = container.querySelector('.smn-altar');
+    if (altarEl) gsap.fromTo(altarEl, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.8, ease: 'power2.out' });
+  }
+
+  // ===== 自定义描述（始终可见）=====
+  var customBox = document.createElement('div');
+  customBox.className = 'smn-custom';
+  customBox.innerHTML =
+    '<div class="smn-custom-label">自定义描述</div>' +
+    '<input class="smn-custom-input" id="summonCustomInput" placeholder="例：来自魔兽世界的兽人步兵，手持战斧，狂暴战士风格" ' +
+      'onkeydown="if(event.key===\'Enter\') doSummon(1)">' +
+    '<div class="smn-custom-hint">留空则完全随机生成</div>';
+  container.appendChild(customBox);
+
+  // ===== 召唤记录（折叠）=====
+  var historyBox = document.createElement('div');
+  historyBox.className = 'smn-history';
+  var historyItems = '';
   if (GameState._summonHistory && GameState._summonHistory.length > 0) {
     GameState._summonHistory.forEach(function(h) {
-      historyHtml += '<div class="sh-item"><span style="color:#d4a017">💎-'+h.cost+'</span> ' + escapeHtml(h.name) + ' <span style="color:#8a6d4b;font-size:10px">' + escapeHtml(h.time) + '</span></div>';
+      historyItems += '<div class="smn-history-item"><span style="color:#d4a017">-' + h.cost + '</span> ' + escapeHtml(h.name) + ' <span style="opacity:.5;font-size:10px">' + escapeHtml(h.time) + '</span></div>';
     });
   } else {
-    historyHtml += '<div class="sh-empty">暂无召唤记录</div>';
+    historyItems = '<div class="smn-history-empty">暂无记录</div>';
   }
-  historyDiv.innerHTML = historyHtml;
-  container.appendChild(historyDiv);
+  historyBox.innerHTML =
+    '<div class="smn-history-head" onclick="toggleSmnHistory(this)">' +
+      '<span>召唤记录</span>' +
+      '<span class="smn-history-arrow">▼</span>' +
+    '</div>' +
+    '<div class="smn-history-body">' + historyItems + '</div>';
+  container.appendChild(historyBox);
 
-  // 召唤记录卡片入场交错动画（列表 stagger 0.04s）
-  if (window.PageTransitions) {
-    PageTransitions.staggerItems('.sh-item', historyDiv, 0.04);
+  // ===== 底部提示 =====
+  var tip = document.createElement('div');
+  tip.className = 'smn-footer-tip';
+  tip.innerHTML = '需先运行 <code>node server.js</code>，AI 生成兵团（名字/装备/背景均由 AI 创作）';
+  container.appendChild(tip);
+}
+
+// 召唤记录折叠
+function toggleSmnHistory(trigger) {
+  var body = trigger.nextElementSibling;
+  if (trigger.classList.contains('open')) {
+    trigger.classList.remove('open');
+    body.classList.remove('open');
+  } else {
+    trigger.classList.add('open');
+    body.classList.add('open');
   }
 }
 
-// ===== 执行召唤并展示结果 =====
+// ===== 执行召唤 =====
 function doSummon(tier) {
   var customInput = document.getElementById('summonCustomInput');
   var customDesc = customInput ? customInput.value.trim() : '';
 
   var t = SUMMON_TIERS[tier];
-  var btns = document.querySelectorAll('.stc-btn');
-  btns.forEach(function(b) { b.disabled = true; b.textContent = '召唤中...'; });
+  var btns = document.querySelectorAll('.smn-card-btn');
+  btns.forEach(function(b) { b.disabled = true; b.textContent = '...'; });
 
-  // 显示召唤仪式动画
   var ritualOverlay = createSummonRitual();
 
   executeSummon(tier, customDesc, function(res) {
-    btns.forEach(function(b) { b.disabled = false; b.textContent = '召唤！'; });
+    btns.forEach(function(b) { b.disabled = false; b.textContent = '召唤'; });
 
     if (res.error) {
       if (ritualOverlay) ritualOverlay.remove();
@@ -114,7 +171,6 @@ function doSummon(tier) {
 
     var result = res.result;
 
-    // 记录历史
     if (!GameState._summonHistory) GameState._summonHistory = [];
     GameState._summonHistory.unshift({
       cost: t.cost, name: result.summary.name, type: result.summary.type,
@@ -123,14 +179,12 @@ function doSummon(tier) {
     if (GameState._summonHistory.length > 20) GameState._summonHistory.length = 20;
 
     saveToBrowser(GameState.saveName);
-    showToast('召唤成功！-' + t.cost + '积分 获得 ' + result.summary.name, 'success');
+    showToast('召唤成功 -' + t.cost + '积分 获得 ' + result.summary.name, 'success');
 
-    // 仪式动画完成后显示结果
     setTimeout(function() {
       if (ritualOverlay && window.gsap) {
         gsap.to(ritualOverlay, {
-          opacity: 0,
-          duration: 0.4,
+          opacity: 0, duration: 0.4,
           onComplete: function() {
             ritualOverlay.remove();
             showSummonModal(result, tier);
@@ -146,47 +200,41 @@ function doSummon(tier) {
   });
 }
 
-// 创建召唤仪式动画
+// ===== 召唤仪式动画 =====
 function createSummonRitual() {
   var overlay = document.createElement('div');
-  overlay.id = 'summonRitualOverlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(20,15,10,0.92);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;';
+  overlay.className = 'smn-ritual-overlay';
   overlay.innerHTML =
-    '<div style="position:relative;width:320px;height:320px;">' +
-      '<div id="ritualRing1" style="position:absolute;inset:0;border:3px solid #d4a017;border-radius:50%;opacity:0;box-shadow:0 0 20px rgba(212,160,23,0.5),inset 0 0 20px rgba(212,160,23,0.2);"></div>' +
-      '<div id="ritualRing2" style="position:absolute;inset:25px;border:2px solid #c4a060;border-radius:50%;opacity:0;"></div>' +
-      '<div id="ritualRing3" style="position:absolute;inset:50px;border:1px solid #b89b6e;border-radius:50%;opacity:0;"></div>' +
-      '<div id="ritualCore" style="position:absolute;inset:80px;background:radial-gradient(circle,rgba(212,160,23,0.9),rgba(212,160,23,0.3) 50%,transparent);border-radius:50%;opacity:0;"></div>' +
-      '<div id="ritualRune" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;">' +
-        '<div class="ritual-hexagram" style="width:80px;height:80px;position:relative;">' +
-          '<div style="position:absolute;inset:0;background:linear-gradient(60deg,transparent 42%,#ffd700 42%,#ffd700 58%,transparent 58%),linear-gradient(-60deg,transparent 42%,#ffd700 42%,#ffd700 58%,transparent 58%);clip-path:polygon(50% 0%,100% 100%,0% 100%);filter:drop-shadow(0 0 10px rgba(255,215,0,0.8));"></div>' +
-          '<div style="position:absolute;inset:0;background:linear-gradient(60deg,transparent 42%,#ffd700 42%,#ffd700 58%,transparent 58%),linear-gradient(-60deg,transparent 42%,#ffd700 42%,#ffd700 58%,transparent 58%);clip-path:polygon(50% 0%,100% 100%,0% 100%);transform:rotate(180deg);filter:drop-shadow(0 0 10px rgba(255,215,0,0.8));"></div>' +
-        '</div>' +
-      '</div>' +
-      '<div id="ritualText" style="position:absolute;bottom:-40px;left:0;right:0;text-align:center;color:#d4a017;font-size:16px;letter-spacing:6px;opacity:0;font-family:SimSun,serif;">召唤中...</div>' +
+    '<div class="ritual-container">' +
+      '<div class="ritual-ring ritual-ring-1"></div>' +
+      '<div class="ritual-ring ritual-ring-2"></div>' +
+      '<div class="ritual-ring ritual-ring-3"></div>' +
+      '<div class="ritual-core"></div>' +
+      '<div class="ritual-hex">' + hexagramSVG(120, '#ffd700', 1.5) + '</div>' +
+      '<div class="ritual-text">召 唤 中</div>' +
     '</div>';
   document.body.appendChild(overlay);
 
   if (window.gsap) {
     var tl = gsap.timeline();
     tl.to(overlay, { opacity: 1, duration: 0.4 })
-      .fromTo('#ritualRing1', { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'power2.out' }, 0.2)
-      .fromTo('#ritualRing2', { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 0.7, duration: 0.5, ease: 'power2.out' }, 0.3)
-      .fromTo('#ritualRing3', { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 0.5, duration: 0.5, ease: 'power2.out' }, 0.4)
-      .fromTo('#ritualCore', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.5)' }, 0.5)
-      .fromTo('#ritualRune', { scale: 0.5, opacity: 0, rotation: -180 }, { scale: 1, opacity: 1, rotation: 0, duration: 0.6, ease: 'power3.out' }, 0.6)
-      .fromTo('#ritualText', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, 0.8)
-      .to('#ritualRing1', { rotation: 360, duration: 2, ease: 'none', repeat: -1 }, 0.8)
-      .to('#ritualRing2', { rotation: -360, duration: 2.5, ease: 'none', repeat: -1 }, 0.8)
-      .to('#ritualRing3', { rotation: 360, duration: 3, ease: 'none', repeat: -1 }, 0.8)
-      .to('#ritualCore', { scale: 1.2, opacity: 0.8, duration: 0.8, ease: 'sine.inOut', yoyo: true, repeat: -1 }, 1)
-      .to('#ritualRune', { scale: 1.2, duration: 0.6, ease: 'power2.inOut', yoyo: true, repeat: -1 }, 1);
+      .fromTo('.ritual-ring-1', { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'power2.out' }, 0.2)
+      .fromTo('.ritual-ring-2', { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 0.7, duration: 0.5, ease: 'power2.out' }, 0.3)
+      .fromTo('.ritual-ring-3', { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 0.5, duration: 0.5, ease: 'power2.out' }, 0.4)
+      .fromTo('.ritual-core', { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(1.5)' }, 0.5)
+      .fromTo('.ritual-hex', { scale: 0.5, opacity: 0, rotation: -180 }, { scale: 1, opacity: 1, rotation: 0, duration: 0.6, ease: 'power3.out' }, 0.6)
+      .fromTo('.ritual-text', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, 0.8)
+      .to('.ritual-ring-1', { rotation: 360, duration: 2, ease: 'none', repeat: -1 }, 0.8)
+      .to('.ritual-ring-2', { rotation: -360, duration: 2.5, ease: 'none', repeat: -1 }, 0.8)
+      .to('.ritual-ring-3', { rotation: 360, duration: 3, ease: 'none', repeat: -1 }, 0.8)
+      .to('.ritual-core', { scale: 1.3, opacity: 0.7, duration: 0.8, ease: 'sine.inOut', yoyo: true, repeat: -1 }, 1)
+      .to('.ritual-hex', { rotation: 360, duration: 8, ease: 'none', repeat: -1 }, 0.8);
   }
 
   return overlay;
 }
 
-// ===== 召唤成果弹窗 =====
+// ===== 召唤结果弹窗 =====
 function showSummonModal(result, tier) {
   var existing = document.getElementById('summonModal');
   if (existing) existing.remove();
@@ -194,145 +242,78 @@ function showSummonModal(result, tier) {
   var s = result.summary;
   var t = SUMMON_TIERS[tier] || SUMMON_TIERS[1];
 
-  var modal = document.createElement('div');
-  modal.id = 'summonModal';
-  modal.style.cssText =
-    'position:fixed;top:0;left:0;width:100%;height:100%;' +
-    'background:rgba(20,15,10,0.88);display:flex;' +
-    'align-items:center;justify-content:center;z-index:1000;';
+  var overlay = document.createElement('div');
+  overlay.id = 'summonModal';
+  overlay.className = 'smn-modal-overlay';
 
-  var typeColor = s.type === 'flying' ? '#7b68ee' : (s.type === 'cavalry' ? '#d4a017' : (s.type === 'archer' ? '#4a9c2d' : '#8b4513'));
+  var tierColors = { 4: '#a78bfa', 3: '#ffd700', 2: '#cd7f32', 1: '#888888' };
+  var accentColor = tierColors[tier] || '#d4a017';
 
-  // 兜底：所有可能为 undefined 的字段都给默认值
-  var hp = s.hp !== undefined ? s.hp : '—';
-  var hpPerUnit = s.hpPerUnit !== undefined ? s.hpPerUnit : '—';
-  var armor = s.armor !== undefined ? s.armor : '—';
+  var hp = s.hp !== undefined ? s.hp : '--';
+  var hpPerUnit = s.hpPerUnit !== undefined ? s.hpPerUnit : '--';
+  var armor = s.armor !== undefined ? s.armor : '--';
   var rangedResist = s.rangedResist !== undefined ? s.rangedResist : 0;
-  var atk = s.atk !== undefined ? s.atk : '—';
+  var atk = s.atk !== undefined ? s.atk : '--';
   var ap = s.ap !== undefined ? s.ap : 0;
   var atkRange = s.atkRange !== undefined ? s.atkRange : 1;
   var allowedRange = s.allowedRange !== undefined ? s.allowedRange : 1;
-  var move = s.move !== undefined ? s.move : '—';
-  var morale = s.morale !== undefined ? s.morale : '—';
-  var unitScale = s.unitScale !== undefined ? s.unitScale : '—';
-  var unitCount = s.unitCount !== undefined ? s.unitCount : '—';
-  var power = s.power !== undefined ? s.power : '—';
-  // 盾牌名字：优先用 summary 里的
+  var move = s.move !== undefined ? s.move : '--';
+  var morale = s.morale !== undefined ? s.morale : '--';
+  var unitCount = s.unitCount !== undefined ? s.unitCount : '--';
+  var power = s.power !== undefined ? s.power : '--';
   var shieldName = s.shieldName || '无';
   var weaponHanded = s.weaponHanded || 'one-handed';
   var handedLabel = weaponHanded === 'two-handed' ? '双手' : '单手';
 
-  modal.innerHTML =
-    '<div style="' +
-      'background:linear-gradient(135deg,#f5ecd7 0%,#e8dcc0 100%);' +
-      'border:3px solid ' + typeColor + ';' +
-      'border-radius:16px;padding:28px 32px;max-width:520px;width:90%;' +
-      'max-height:85vh;overflow-y:auto;' +
-      'box-shadow:0 0 60px rgba(0,0,0,0.4);' +
-    '">' +
-
-      // 标题
-      '<div style="text-align:center;margin-bottom:16px">' +
-        '<div style="font-size:48px">' + escapeHtml(s.icon) + '</div>' +
-        '<h2 style="font-size:24px;color:' + typeColor + ';margin:6px 0;letter-spacing:4px;font-family:SimSun,serif">' + escapeHtml(s.name) + '</h2>' +
-        '<div style="font-size:12px;color:#8a6d4b">' + escapeHtml(s.tierLabel) + ' ' + escapeHtml(s.tierName) + '　·　' + escapeHtml(s.race) + '　·　' + escapeHtml(s.typeName) + '</div>' +
+  overlay.innerHTML =
+    '<div class="smn-modal">' +
+      '<div class="smn-modal-icon">' + escapeHtml(s.icon) + '</div>' +
+      '<div class="smn-modal-name" style="color:' + accentColor + '">' + escapeHtml(s.name) + '</div>' +
+      '<div class="smn-modal-meta">' + escapeHtml(s.tierLabel) + ' ' + escapeHtml(s.tierName) + ' · ' + escapeHtml(s.race) + ' · ' + escapeHtml(s.typeName) + '</div>' +
+      '<div class="smn-modal-divider"></div>' +
+      '<div class="smn-modal-stats">' +
+        '<div class="smn-stat"><span class="smn-stat-label">总血量</span><span class="smn-stat-val">' + hp + '</span><span class="smn-stat-sub">单体' + hpPerUnit + ' x ' + unitCount + '</span></div>' +
+        '<div class="smn-stat"><span class="smn-stat-label">护甲</span><span class="smn-stat-val">' + armor + '</span><span class="smn-stat-sub">远程免伤' + rangedResist + '%</span></div>' +
+        '<div class="smn-stat"><span class="smn-stat-label">攻击</span><span class="smn-stat-val">' + atk + '</span><span class="smn-stat-sub">破甲' + ap + '</span></div>' +
+        '<div class="smn-stat"><span class="smn-stat-label">射程</span><span class="smn-stat-val">' + allowedRange + '/' + atkRange + '</span><span class="smn-stat-sub">单次打' + atkRange + '单位</span></div>' +
+        '<div class="smn-stat"><span class="smn-stat-label">机动/士气</span><span class="smn-stat-val">' + move + '/' + morale + '</span><span class="smn-stat-sub">规模' + (s.unitScale || '--') + '</span></div>' +
+        '<div class="smn-stat"><span class="smn-stat-label">人数/战力</span><span class="smn-stat-val">' + unitCount + '/' + power + '</span><span class="smn-stat-sub">' + (s.tierName || '') + '</span></div>' +
       '</div>' +
-
-      // 分隔线
-      '<div style="height:2px;background:linear-gradient(90deg,transparent,' + typeColor + ',transparent);margin:12px 0"></div>' +
-
-      // 属性六宫格
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">' +
-        '<div style="background:rgba(139,69,19,0.08);border:1px solid #c4b290;border-radius:8px;padding:10px;text-align:center">' +
-          '<div style="font-size:10px;color:#8a6d4b">🩸 总血量</div><div style="font-size:18px;color:#8b2500;font-weight:bold">' + hp + '</div>' +
-          '<div style="font-size:9px;color:#8a6d4b">单体' + hpPerUnit + '×' + unitCount + '人</div>' +
-        '</div>' +
-        '<div style="background:rgba(139,69,19,0.08);border:1px solid #c4b290;border-radius:8px;padding:10px;text-align:center">' +
-          '<div style="font-size:10px;color:#8a6d4b">🛡 护甲</div><div style="font-size:18px;color:#8b2500;font-weight:bold">' + armor + '</div>' +
-          '<div style="font-size:9px;color:#8a6d4b">远程免伤' + rangedResist + '%</div>' +
-        '</div>' +
-        '<div style="background:rgba(139,69,19,0.08);border:1px solid #c4b290;border-radius:8px;padding:10px;text-align:center">' +
-          '<div style="font-size:10px;color:#8a6d4b">⚔ 攻击</div><div style="font-size:18px;color:#8b2500;font-weight:bold">' + atk + '</div>' +
-          '<div style="font-size:9px;color:#8a6d4b">破甲' + ap + '</div>' +
-        '</div>' +
-        '<div style="background:rgba(139,69,19,0.08);border:1px solid #c4b290;border-radius:8px;padding:10px;text-align:center">' +
-          '<div style="font-size:10px;color:#8a6d4b">🎯 范围/攻击距离</div><div style="font-size:18px;color:#8b2500;font-weight:bold">' + atkRange + '/' + allowedRange + '</div>' +
-          '<div style="font-size:9px;color:#8a6d4b">单次打' + atkRange + '单位</div>' +
-        '</div>' +
-        '<div style="background:rgba(139,69,19,0.08);border:1px solid #c4b290;border-radius:8px;padding:10px;text-align:center">' +
-          '<div style="font-size:10px;color:#8a6d4b">🏃 机动/士气</div><div style="font-size:18px;color:#8b2500;font-weight:bold">' + move + '格/' + morale + '</div>' +
-          '<div style="font-size:9px;color:#8a6d4b">规模' + unitScale + '</div>' +
-        '</div>' +
-        '<div style="background:rgba(139,69,19,0.08);border:1px solid #c4b290;border-radius:8px;padding:10px;text-align:center">' +
-          '<div style="font-size:10px;color:#8a6d4b">👥 人数</div><div style="font-size:18px;color:#8b2500;font-weight:bold">' + unitCount + '</div>' +
-          '<div style="font-size:9px;color:#8a6d4b">战力' + power + '</div>' +
-        '</div>' +
+      '<div class="smn-modal-equip">' +
+        '<b>武器</b> ' + escapeHtml(s.weaponName) + ' (' + handedLabel + ')　' +
+        '<b>盾牌</b> ' + escapeHtml(shieldName) + '<br>' +
+        '<b>护甲</b> ' + escapeHtml(s.armorName) + '　' +
+        '<b>坐骑</b> ' + escapeHtml(s.mountName) +
       '</div>' +
-
-      // 装备一览
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;color:#5a3e20;margin-bottom:12px;padding:10px;background:rgba(0,0,0,0.03);border-radius:8px">' +
-        '<div>🗡 主武器：' + escapeHtml(s.weaponName) + ' <span style="color:#8a6d4b">(' + handedLabel + ')</span></div>' +
-        '<div>🛡 盾牌：' + escapeHtml(shieldName) + '</div>' +
-        '<div>🛡 护甲：' + escapeHtml(s.armorName) + '</div>' +
-        '<div>🐴 坐骑：' + escapeHtml(s.mountName) + '</div>' +
-        '<div>🧬 种族：' + escapeHtml(s.race) + '</div>' +
+      '<div class="smn-modal-lore">' +
+        '<b>背景：</b>' + escapeHtml(s.background) + '<br>' +
+        '<b>信念：</b>' + escapeHtml(s.belief) +
       '</div>' +
-
-      // 背景与信念
-      '<div style="font-size:11px;color:#5a3e20;line-height:1.7;margin-bottom:12px;padding:10px;background:rgba(0,0,0,0.02);border-radius:8px">' +
-        '<p><b>背景：</b>' + escapeHtml(s.background) + '</p>' +
-        '<p><b>信念：</b>' + escapeHtml(s.belief) + '</p>' +
-      '</div>' +
-
-      // 底部按钮
-      '<div style="text-align:center">' +
-        '<button onclick="closeSummonModal()" style="' +
-          'padding:10px 36px;font-size:15px;border:2px solid ' + typeColor + ';border-radius:8px;' +
-          'background:linear-gradient(135deg,#f5ecd7 0%,#e8dcc0 100%);' +
-          'color:#3d1a00;cursor:pointer;font-family:SimSun,serif;letter-spacing:2px;' +
-        '">确认</button>' +
-      '</div>' +
+      '<button class="smn-modal-confirm" onclick="closeSummonModal()">确 认</button>' +
     '</div>';
 
-  document.body.appendChild(modal);
+  document.body.appendChild(overlay);
 
-  // 弹窗入场动画
   if (window.gsap) {
-    var modalContent = modal.firstElementChild;
-    gsap.fromTo(modal, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+    var modalContent = overlay.querySelector('.smn-modal');
+    gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.3 });
     gsap.fromTo(modalContent,
       { opacity: 0, scale: 0.7, rotationY: -15 },
-      {
-        opacity: 1,
-        scale: 1,
-        rotationY: 0,
-        duration: 0.6,
-        ease: 'back.out(1.4)'
-      }
+      { opacity: 1, scale: 1, rotationY: 0, duration: 0.6, ease: 'back.out(1.4)' }
     );
-    // 属性格子交错入场
     setTimeout(function() {
-      var stats = modalContent.querySelectorAll('[style*="grid-template-columns"] > div');
+      var stats = modalContent.querySelectorAll('.smn-stat');
       if (stats.length) {
         gsap.fromTo(stats,
           { opacity: 0, y: 20, scale: 0.8 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.4,
-            stagger: 0.08,
-            ease: 'back.out(1.4)'
-          }
+          { opacity: 1, y: 0, scale: 1, duration: 0.4, stagger: 0.08, ease: 'back.out(1.4)' }
         );
       }
     }, 200);
   }
 
-  // 激活 revealCard 卡牌揭示动画（叠加在入场动画之上：rotationY 90→0, scale 0.5→1, 0.6s back.out(1.4)）
-  // 保留上方既有入场动画逻辑不变，revealCard 后调用其数值覆盖呈现卡牌翻转效果
   if (window.SummonAnimations && SummonAnimations.revealCard) {
-    var revealTarget = modal.firstElementChild;
+    var revealTarget = overlay.querySelector('.smn-modal');
     if (revealTarget) SummonAnimations.revealCard(revealTarget);
   }
 }
@@ -341,11 +322,8 @@ function closeSummonModal() {
   var modal = document.getElementById('summonModal');
   if (!modal) return;
   if (window.gsap) {
-    var content = modal.firstElementChild;
-    modal.classList.add('modal-closing');
-    if (content) {
-      gsap.to(content, { opacity: 0, scale: 0.9, duration: 0.2, ease: 'power2.in' });
-    }
+    var content = modal.querySelector('.smn-modal');
+    if (content) gsap.to(content, { opacity: 0, scale: 0.9, duration: 0.2, ease: 'power2.in' });
     gsap.to(modal, { opacity: 0, duration: 0.22, ease: 'power2.in' });
     setTimeout(function() { modal.remove(); }, 220);
   } else {
@@ -357,3 +335,4 @@ function closeSummonModal() {
 window.buildSummonPage = buildSummonPage;
 window.doSummon = doSummon;
 window.closeSummonModal = closeSummonModal;
+window.toggleSmnHistory = toggleSmnHistory;

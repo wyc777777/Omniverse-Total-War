@@ -15,8 +15,8 @@ function isBowBlockedByAdjacentEnemy(piece) {
   if (!wpn || wpn.type !== 'bow') return false;
   // 检查相邻格是否有敌军
   var blocked = false;
-  Object.keys(placedPieces).forEach(function(k) {
-    var p = placedPieces[k];
+  // 使用 BoardAPI 解耦 API 遍历棋子
+  BoardAPI.forEach(function(p, k) {
     if (p.team !== piece.team && !p._routed && hDist(piece.hex, p.hex) <= 1) blocked = true;
   });
   return blocked;
@@ -24,14 +24,24 @@ function isBowBlockedByAdjacentEnemy(piece) {
 
 // ★ 主入口：攻击方key → 防御方key
 function executeCombat(atkKey, defKey) {
-  var atkPiece = placedPieces[atkKey];
-  var defPiece = placedPieces[defKey];
-  if (!atkPiece || !defPiece) return;
-  if (atkPiece._routed || defPiece._routed) return;
+  // 使用 BoardAPI 解耦 API 读取棋子
+  var atkPiece = BoardAPI.getPiece(atkKey);
+  var defPiece = BoardAPI.getPiece(defKey);
+  if (!atkPiece || !defPiece) {
+    if (console && console.warn) console.warn('[战斗] 找不到棋子', atkKey, defKey);
+    return;
+  }
+  if (atkPiece._routed || defPiece._routed) {
+    if (console && console.warn) console.warn('[战斗] 棋子已溃散', atkKey, defKey);
+    return;
+  }
 
   var atkUD = unitDefByType(atkPiece.unitType);
   var defUD = unitDefByType(defPiece.unitType);
-  if (!atkUD || !defUD) return;
+  if (!atkUD || !defUD) {
+    if (console && console.warn) console.warn('[战斗] 找不到单位定义', atkPiece.unitType, defPiece.unitType);
+    return;
+  }
 
   // 脏数据消毒：如果运行时状态是NaN→用原始值覆盖（斩断NaN传染链）
   if (isNaN(atkPiece._currentCount)) atkPiece._currentCount = atkUD.unitCount;
@@ -79,8 +89,8 @@ function executeCombat(atkKey, defKey) {
 
   // 2. 连锁溃逃
   var routNearby = 0;
-  Object.keys(placedPieces).forEach(function(k) {
-    var p = placedPieces[k];
+  // 使用 BoardAPI 解耦 API 遍历棋子
+  BoardAPI.forEach(function(p, k) {
     if (p.team === defPiece.team && p._routed && hDist(defPiece.hex, p.hex) <= 2) routNearby++;
   });
   if (routNearby > 0) moraleEffects.push({target: 'def', amount: -3 * routNearby, reason: '连锁溃逃（2格内' + routNearby + '支友军溃逃）'});
@@ -154,11 +164,17 @@ function executeCombat(atkKey, defKey) {
     dirMoralePenalty = -5;    // -5士气
     if (isCharger) dirCavalryBonus = 1.2; // 侧面冲锋+20%伤害
     addWarReportLine('[侧袭] ' + atkUD.name + ' 从侧翼攻击' + defUD.name + '，护甲-10%，士气-5');
+    if (typeof showDamageNumber === 'function') {
+      showDamageNumber(defPiece.hex, '侧袭!', 'crit');
+    }
   } else if (azimuth === 'rear') {
     dirArmorReduction = 0.20; // 20%护甲降低
     dirMoralePenalty = -10;   // -10士气
     if (isCharger) dirCavalryBonus = 1.4; // 背面冲锋+40%伤害
     addWarReportLine('[背袭] ' + atkUD.name + ' 从背后袭击' + defUD.name + '，护甲-20%，士气-10');
+    if (typeof showDamageNumber === 'function') {
+      showDamageNumber(defPiece.hex, '背袭!', 'crit');
+    }
   }
 
   // 应用方位士气打击
@@ -254,9 +270,11 @@ function executeCombat(atkKey, defKey) {
 
   // ==== 阶段4：战损与崩溃 ====
   var hpRatio = defPiece._initialHP ? defSt.totalHP / defPiece._initialHP : 1;
-  if (hpRatio <= 0.25) { defSt.morale -= 25; addWarReportLine('[战损] 血量降至25%以下，士气-25'); }
-  else if (hpRatio <= 0.5) { defSt.morale -= 15; addWarReportLine('[战损] 血量降至50%以下，士气-15'); }
-  else if (hpRatio <= 0.75) { defSt.morale -= 10; addWarReportLine('[战损] 血量降至75%以下，士气-10'); }
+  var moralePenalty = 0;
+  if (hpRatio <= 0.75) { moralePenalty -= 8; addWarReportLine('[战损] 血量降至75%以下，士气-8'); }
+  if (hpRatio <= 0.5) { moralePenalty -= 10; addWarReportLine('[战损] 血量降至50%以下，士气-10'); }
+  if (hpRatio <= 0.25) { moralePenalty -= 12; addWarReportLine('[战损] 血量降至25%以下，士气-12'); }
+  defSt.morale += moralePenalty;
 
   // 崩溃判定
   var defRouted = false;
@@ -310,8 +328,8 @@ function executeCombat(atkKey, defKey) {
       }
     }
     // 友军鼓舞：击杀者2格内友军 +3士气
-    Object.keys(placedPieces).forEach(function(k) {
-      var p = placedPieces[k];
+    // 使用 BoardAPI 解耦 API 遍历棋子
+    BoardAPI.forEach(function(p, k) {
       if (p.team === atkPiece.team && !p._routed && p !== atkPiece) {
         if (hDist(p.hex, atkPiece.hex) <= 2) {
           p._currentMorale = Math.min(100, (p._currentMorale || 0) + 3);
@@ -334,7 +352,7 @@ function executeCombat(atkKey, defKey) {
   }
 
   // ★ 受击晃动动画（在伤害结算后触发，仅当防御方仍存在于棋盘时）
-  if (typeof shakePiece === 'function' && placedPieces[defKey]) {
+  if (typeof shakePiece === 'function' && BoardAPI.hasPiece(defKey)) { // 使用 BoardAPI 解耦 API 检查存在
     shakePiece(defKey);
   }
 
@@ -346,7 +364,7 @@ function executeCombat(atkKey, defKey) {
   // 清理溃逃棋子
   if (defPiece._routed) {
     if (typeof archiveRoutedPiece === 'function') archiveRoutedPiece(defKey);
-    delete placedPieces[defKey];
+    BoardAPI.removePiece(defKey); // 使用 BoardAPI 解耦 API 移除棋子
     addWarReportLine('[消灭] ' + defUD.name + ' 已被击溃，从棋盘移除！');
     // 显示击杀漂浮提示
     if (typeof showKillNotify === 'function') showKillNotify(atkUD.name, defUD.name);
@@ -357,6 +375,12 @@ function executeCombat(atkKey, defKey) {
   }
 
   requestRender();
+
+  if (typeof updateUnitAttrPanel === 'function' && TurnState.isDuelBattle) {
+    updateUnitAttrPanel('A');
+    updateUnitAttrPanel('B');
+  }
+
   return finalDmg;
 }
 
@@ -388,8 +412,8 @@ function computeCombatPreview(atkPiece, defPiece) {
     ? ED.weapons.find(function(w) { return w.id === atkUD.equipment.mainWeapon; }) : null;
   if (atkWpnPrev && atkWpnPrev.type === 'bow') {
     var meleeBan = false;
-    Object.keys(placedPieces).forEach(function(k) {
-      var p = placedPieces[k];
+    // 使用 BoardAPI 解耦 API 遍历棋子
+    BoardAPI.forEach(function(p, k) {
       if (p.team !== atkPiece.team && !p._routed && hDist(atkPiece.hex, p.hex) <= 1) meleeBan = true;
     });
     if (meleeBan) return { blocked: true };
@@ -478,9 +502,9 @@ function computeCombatPreview(atkPiece, defPiece) {
   var remainingHP = Math.max(0, (defSt.unitCount - lostMen) * hpPerUnitSafe - (totalDieDamage % hpPerUnitSafe));
   var hpRatio = defPiece._initialHP ? remainingHP / defPiece._initialHP : 1;
   var moraleAfter = defSt.morale;
+  if (hpRatio <= 0.75) moraleAfter -= 8;
+  if (hpRatio <= 0.5) moraleAfter -= 10;
   if (hpRatio <= 0.25) moraleAfter -= 12;
-  else if (hpRatio <= 0.5) moraleAfter -= 10;
-  else if (hpRatio <= 0.75) moraleAfter -= 8;
 
   var isNeverRout = defUD && defUD._neverRout;
   var willRout = (moraleAfter <= 0 && defSt.race.baseMorale !== 100 && !isNeverRout) || remainingHP <= 0;
@@ -537,7 +561,8 @@ function showWarReport(report) {
 function tryOpportunityAttack(movingPieceKey) {
   if (!movingPieceKey) return;
 
-  var movingPiece = placedPieces[movingPieceKey];
+  // 使用 BoardAPI 解耦 API 读取棋子
+  var movingPiece = BoardAPI.getPiece(movingPieceKey);
   if (!movingPiece || movingPiece._routed) return;
   if (TurnState.phase !== 'battle') return;
 
@@ -550,8 +575,8 @@ function tryOpportunityAttack(movingPieceKey) {
 
   // 查找该 hex 周围 1 格内的敌方近战单位
   var potentialAttackers = [];
-  Object.keys(placedPieces).forEach(function(k) {
-    var p = placedPieces[k];
+  // 使用 BoardAPI 解耦 API 遍历棋子
+  BoardAPI.forEach(function(p, k) {
     if (!p || p._routed) return;
     if (p.team === movingTeam) return;
     if (hDist(movingHex, p.hex) > 1) return;
@@ -588,8 +613,9 @@ function executeOpportunityAttack(atkKey, defKey) {
   //   伤害 = B 一次攻击的伤害 × 0.6
   //   固定 -A 的 5 士气
   // atkPiece = B（偷袭者），defPiece = A（被偷袭的移动方）
-  var atkPiece = placedPieces[atkKey];
-  var defPiece = placedPieces[defKey];
+  // 使用 BoardAPI 解耦 API 读取棋子
+  var atkPiece = BoardAPI.getPiece(atkKey);
+  var defPiece = BoardAPI.getPiece(defKey);
   if (!atkPiece || !defPiece) return;
   if (atkPiece._routed || defPiece._routed) return;
 
@@ -672,7 +698,7 @@ function executeOpportunityAttack(atkKey, defKey) {
   }
 
   // ★ 受击晃动动画（仅当被偷袭方仍存在于棋盘时）
-  if (typeof shakePiece === 'function' && placedPieces[defKey]) {
+  if (typeof shakePiece === 'function' && BoardAPI.hasPiece(defKey)) { // 使用 BoardAPI 解耦 API 检查存在
     shakePiece(defKey);
   }
 
@@ -683,7 +709,7 @@ function executeOpportunityAttack(atkKey, defKey) {
       defPiece._statuses = [];
     }
     if (typeof archiveRoutedPiece === 'function') archiveRoutedPiece(defKey);
-    delete placedPieces[defKey];
+    BoardAPI.removePiece(defKey); // 使用 BoardAPI 解耦 API 移除棋子
     if (typeof showDamageNumber === 'function') {
       showDamageNumber(defPiece.hex, '溃逃', 'routed');
     }

@@ -16,54 +16,41 @@ const AI_HEX_DIRS = [
 const AI_DIFFICULTY_CONFIG = {
   easy: {
     name: '简单',
-    // 只会向着最近的敌人移动并攻击，不会战术
     targeting: 'nearest',
     moveStyle: 'toward',
-    maxMoveSteps: 3,
     aggression: 0.4,
     preferRanged: false,
     flankingBonus: false,
     coordinatedAttack: false,
     formationBonus: false,
     retreatWhenLow: false,
-    // 20% 概率不动
     skipChance: 0.2,
-    // 不考虑士气
     moraleSensitive: false
   },
   hard: {
     name: '困难',
-    // 会思考移动，会抱团，对血量低的敌人攻击欲望更高，知道侧面背面打击
     targeting: 'smart',
     moveStyle: 'coordinated',
-    maxMoveSteps: 4,
     aggression: 0.75,
     preferRanged: true,
     flankingBonus: true,
     coordinatedAttack: true,
     formationBonus: true,
     retreatWhenLow: false,
-    // 不会跳过回合
     skipChance: 0,
-    // 对士气不敏感（不会因低士气改变策略）
     moraleSensitive: false
   },
   legend: {
     name: '传说',
-    // 会抱团会集火，攻击欲望强，会计算距离使自己更容易打到玩家
-    // 让玩家打不到自己或无法包围自己，会先以减员玩家部队为目的
     targeting: 'tactical',
     moveStyle: 'legend',
-    maxMoveSteps: 5,
     aggression: 0.95,
     preferRanged: true,
     flankingBonus: true,
     coordinatedAttack: true,
     formationBonus: true,
     retreatWhenLow: false,
-    // 永远不会跳过回合
     skipChance: 0,
-    // 会考虑士气但不采用逃避策略
     moraleSensitive: true,
     moraleRetreat: false
   }
@@ -102,7 +89,6 @@ function getAIConfig(difficulty) {
       name: window.DC.levels[diff].label || diff,
       targeting: dcAI.targeting || 'nearest',
       moveStyle: dcAI.moveStyle || 'toward',
-      maxMoveSteps: dcAI.maxMoveSteps || 3,
       aggression: dcAI.aggression !== undefined ? dcAI.aggression : 0.5,
       preferRanged: dcAI.preferRanged || false,
       flankingBonus: dcAI.flankingBonus || false,
@@ -292,45 +278,17 @@ function aiSelectTarget(aiUnit, enemies) {
 
 // 获取所有可用移动位置（BFS）
 function aiGetMoveCandidates(aiUnit, maxSteps) {
-  var candidates = [];
-  var visited = {};
-  var queue = [{ hex: aiUnit.piece.hex, steps: 0 }];
-  visited[aiUnit.piece.hex.q + ',' + aiUnit.piece.hex.r + ',' + aiUnit.piece.hex.s] = true;
-
-  while (queue.length > 0) {
-    var curr = queue.shift();
-    // 排除地形格（山脉/湖泊不可进入）
-    var isTerrain = (typeof isTerrainBlocked === 'function') && isTerrainBlocked(curr.hex);
-    if (curr.steps > 0 && !placedPieces[curr.hex.q + ',' + curr.hex.r + ',' + curr.hex.s] && !isTerrain) {
-      candidates.push({ hex: curr.hex, dist: curr.steps });
-    }
-    if (curr.steps < maxSteps) {
-      for (var i = 0; i < AI_HEX_DIRS.length; i++) {
-        var d = AI_HEX_DIRS[i];
-        var nq = curr.hex.q + d.q;
-        var nr = curr.hex.r + d.r;
-        var ns = curr.hex.s + d.s;
-        var nkey = nq + ',' + nr + ',' + ns;
-        if (Math.abs(nq) > RADIUS || Math.abs(nr) > RADIUS || Math.abs(ns) > RADIUS) continue;
-        if (visited[nkey]) continue;
-        // 地形格不可通行
-        var nth = { q: nq, r: nr, s: ns };
-        if ((typeof isTerrainBlocked === 'function') && isTerrainBlocked(nth)) continue;
-        if (placedPieces[nkey] && placedPieces[nkey].team !== aiUnit.piece.team) continue;
-        visited[nkey] = true;
-        queue.push({ hex: nth, steps: curr.steps + 1 });
-      }
-    }
-  }
-  return candidates;
+  var st = getPieceStats(aiUnit.piece);
+  var isFlying = st && st.baseType === 'flying';
+  var actualMove = st ? st.movement : 1;
+  var steps = Math.min(maxSteps, actualMove);
+  return getReachableHexes(aiUnit.piece.hex, steps, isFlying, aiUnit.piece.team);
 }
 
 // 朝向目标移动（简单难度使用）
 function aiMoveToward(aiUnit, target) {
-  var configMax = AIState.config ? AIState.config.maxMoveSteps : 3;
   var st = getPieceStats(aiUnit.piece);
-  var actualMove = st ? st.movement : 1;
-  var maxSteps = Math.min(configMax, actualMove); // 不能超过单位实际移动力
+  var maxSteps = st ? st.movement : 1;
   var candidates = aiGetMoveCandidates(aiUnit, maxSteps);
   if (candidates.length === 0) return null;
 
@@ -345,10 +303,8 @@ function aiMoveToward(aiUnit, target) {
 // 困难难度：背袭>侧袭>正击 + 血量<40%时保守（不冒险走位）
 function aiMoveCoordinated(aiUnit, target, allies, enemies) {
   var config = AIState.config;
-  var configMax = config ? config.maxMoveSteps : 4;
   var st = getPieceStats(aiUnit.piece);
-  var actualMove = st ? st.movement : 1;
-  var maxSteps = Math.min(configMax, actualMove);
+  var maxSteps = st ? st.movement : 1;
   var candidates = aiGetMoveCandidates(aiUnit, maxSteps);
   if (candidates.length === 0) return null;
 
@@ -431,10 +387,8 @@ function aiMoveCoordinated(aiUnit, target, allies, enemies) {
 // 传说难度：分兵种走位 + 集火 + 骑兵切后排
 function aiMoveLegend(aiUnit, target, allies, enemies) {
   var config = AIState.config;
-  var configMax = config ? config.maxMoveSteps : 5;
   var st = getPieceStats(aiUnit.piece);
-  var actualMove = st ? st.movement : 1;
-  var maxSteps = Math.min(configMax, actualMove);
+  var maxSteps = st ? st.movement : 1;
   var candidates = aiGetMoveCandidates(aiUnit, maxSteps);
   if (candidates.length === 0) return null;
 
@@ -550,6 +504,41 @@ function aiMoveLegend(aiUnit, target, allies, enemies) {
       }
     }
 
+    // 传说难度：孤军深入风险评估
+    // 敌方可攻击范围 = 敌方移动距离 + 攻击距离（敌方一回合内能攻击到的范围）
+    // 友方可防御范围 = 友方移动距离（友方一回合内能移动到支援的范围）
+    // 若目标位置在3+敌方攻击范围内且不在任何友方防御范围内 → 高风险惩罚
+    var enemyThreatCount = 0;
+    for (var eti = 0; eti < enemies.length; eti++) {
+      var eUnit = enemies[eti];
+      if (eUnit.piece._routed) continue;
+      var eSt = getPieceStats(eUnit.piece);
+      if (!eSt) continue;
+      var eMove = eSt.movement || 1;
+      var eAtk = eSt.allowedRange || 1;
+      var eThreatRange = eMove + eAtk;
+      if (hDist(c.hex, eUnit.piece.hex) <= eThreatRange) {
+        enemyThreatCount++;
+      }
+    }
+    var inAllySupport = false;
+    for (var asi = 0; asi < allies.length; asi++) {
+      var aUnit = allies[asi];
+      if (aUnit.piece._routed) continue;
+      if (aUnit.key === aiUnit.key) continue;
+      var aSt = getPieceStats(aUnit.piece);
+      if (!aSt) continue;
+      var aMove = aSt.movement || 1;
+      var aSupportRange = aMove;
+      if (hDist(c.hex, aUnit.piece.hex) <= aSupportRange) {
+        inAllySupport = true;
+        break;
+      }
+    }
+    if (enemyThreatCount >= 3 && !inAllySupport) {
+      score -= 120;
+    }
+
     if (score > bestScore) {
       bestScore = score;
       best = c;
@@ -561,11 +550,8 @@ function aiMoveLegend(aiUnit, target, allies, enemies) {
 
 // ===== 士气崩溃撤退：远离所有敌人，靠近友方撤退 =====
 function aiFindRetreat(aiUnit, enemies, allies) {
-  var config = AIState.config;
-  var configMax = config ? config.maxMoveSteps : 5;
   var st = getPieceStats(aiUnit.piece);
-  var actualMove = st ? st.movement : 1;
-  var maxSteps = Math.min(configMax, actualMove);
+  var maxSteps = st ? st.movement : 1;
   var candidates = aiGetMoveCandidates(aiUnit, maxSteps);
   if (candidates.length === 0) return null;
 
@@ -653,6 +639,73 @@ function aiIsAdjacentToInfantry(hex, enemies) {
   return false;
 }
 
+// 评估某格的通道状况：区分"战术卡位"（站在出口挡住敌人）和"钻入死胡同"（进通道内部被卡）
+function aiEvaluatePositionBottleneck(hex, st, aiUnit, enemies) {
+  var passableCount = 0;
+  var passableDirs = [];
+  var blockedByTerrainCount = 0;
+  var isFlying = false;
+  if (aiUnit) {
+    var myUd = unitDefByType(aiUnit.piece.unitType);
+    isFlying = myUd && myUd.baseType === 'flying';
+  }
+  for (var i = 0; i < AI_HEX_DIRS.length; i++) {
+    var d = AI_HEX_DIRS[i];
+    var nq = hex.q + d.q;
+    var nr = hex.r + d.r;
+    var ns = hex.s + d.s;
+    var nkey = nq + ',' + nr + ',' + ns;
+    var terrainBlocked = typeof isTerrainBlocked === 'function' ? isTerrainBlocked({q: nq, r: nr, s: ns}) : false;
+    var piece = BoardAPI.getPiece(nkey);
+    // 检查地形是否可通行
+    var isBlocked = false;
+    if (terrainBlocked) {
+      blockedByTerrainCount++;
+      if (!isFlying) isBlocked = true;
+    }
+    // 检查是否有其他单位阻挡
+    if (piece && !piece._routed && piece !== aiUnit.piece) {
+      isBlocked = true;
+    }
+    if (!isBlocked) {
+      passableCount++;
+      passableDirs.push({ q: nq, r: nr, s: ns });
+    }
+  }
+
+  var isBottleneck = passableCount <= 2 && blockedByTerrainCount >= 2;
+
+  // 判断是否为"战术卡位"：站在通道出口（仅1-2个可通行方向），且至少一个方向有敌方单位正在靠近
+  var isTacticalChoke = false;
+  if (isBottleneck && enemies && enemies.length > 0) {
+    // 检查可通行方向上是否有敌方单位（敌方在通道另一侧想过来）
+    for (var pi = 0; pi < passableDirs.length; pi++) {
+      var dir = passableDirs[pi];
+      for (var ei = 0; ei < enemies.length; ei++) {
+        if (enemies[ei].piece._routed) continue;
+        var ed = hDist(dir, enemies[ei].piece.hex);
+        // 敌方在可通行方向的2-4格内，说明他们想从这条路过来
+        if (ed <= 4) {
+          isTacticalChoke = true;
+          break;
+        }
+      }
+      if (isTacticalChoke) break;
+    }
+  }
+
+  // 判断是否为"钻入通道内部"：可通行方向少，且周围大量地形阻挡，但不在出口
+  var isDeadEnd = isBottleneck && !isTacticalChoke && passableCount <= 1;
+
+  return {
+    passable: passableCount,
+    total: 6,
+    isBottleneck: isBottleneck,
+    isTacticalChoke: isTacticalChoke,
+    isDeadEnd: isDeadEnd
+  };
+}
+
 // 检查移动距离+攻击距离范围内是否有可击杀目标
 function aiFindKillableInRange(aiUnit, enemies, st) {
   if (!st) return null;
@@ -689,10 +742,8 @@ function aiRangerFindCover(aiUnit, enemies) {
   var st = getPieceStats(aiUnit.piece);
   if (!st || !st.mainWeapon || st.mainWeapon.type !== 'bow') return null;
 
-  var config = AIState.config;
-  var configMax = config ? config.maxMoveSteps : 3;
   var actualMove = st ? st.movement : 1;
-  var maxSteps = Math.min(configMax, actualMove);
+  var maxSteps = actualMove;
   var candidates = aiGetMoveCandidates(aiUnit, maxSteps);
   if (candidates.length === 0) return null;
 
@@ -974,10 +1025,8 @@ function aiClassify(aiUnit, st) {
 // 骑兵/空军：找侧袭/背袭位 + 游走
 // 步兵/野兽：队友 > 攻击 > 推进
 function aiDecideMoveOptimize(aiUnit, enemies, allies, st) {
-  var config = AIState.config;
-  var configMax = config ? config.maxMoveSteps : 4;
   var actualMove = st ? st.movement : 1;
-  var maxSteps = Math.min(configMax, actualMove);
+  var maxSteps = actualMove;
   var candidates = aiGetMoveCandidates(aiUnit, maxSteps);
   if (candidates.length === 0) return null;
 
@@ -996,7 +1045,7 @@ function aiDecideMoveOptimize(aiUnit, enemies, allies, st) {
 
   var myRange = st ? (st.allowedRange || 1) : 1;
   var role = aiClassify(aiUnit, st);
-  var strategy = config ? config.moveStyle : 'coordinated';
+  var strategy = AIState.config ? AIState.config.moveStyle : 'coordinated';
 
   // 候选格里加上当前位置（确保不会无意义移动）
   candidates.unshift({ hex: aiUnit.piece.hex, dist: 0 });
@@ -1048,17 +1097,39 @@ function aiDecideMoveOptimize(aiUnit, enemies, allies, st) {
     // 传说集火
     var focusBonus = (strategy === 'legend' && attackTarget && AIState.assignedTargets[attackTarget.key] && AIState.assignedTargets[attackTarget.key].count >= 1) ? 500 : 0;
 
+    // 通道评估：战术卡位加分，钻死胡同惩罚（仅地面单位）
+    // 数值与 aiDecideMove 统一：战术卡位+350，死胡同-500，瓶颈-200
+    var bnBonus = 0;
+    if (role !== 'flying') {
+      try {
+        var bnEval = aiEvaluatePositionBottleneck(c.hex, st, aiUnit, enemies);
+        if (bnEval.isTacticalChoke) {
+          bnBonus = 350;
+        } else if (bnEval.isDeadEnd) {
+          bnBonus = -500;
+        } else if (bnEval.isBottleneck) {
+          bnBonus = -200;
+        }
+      } catch(e) {
+        // 通道评估出错时忽略，不影响主流程
+      }
+    }
+
     var score = 0;
 
     if (role === 'bow') {
-      // 弓兵：三个维度同时参与，不贴脸略重于攻击，攻击重于队友
-      // safeScore=±800, atkScore=+1200/-600, allyScore≤400 → 安全+攻击=2000, 贴脸+攻击=400, 安全+打不到=200
-      score = safeScore * 1.2 + atkScore + allyScore + focusBonus;
+      // 弓兵：能攻击是最高优先级，其次是安全和队友
+      // 修正：原来safeScore*1.2导致弓兵宁愿放弃攻击也要安全，现在攻击是最高优先级
+      // safeScore=±800, atkScore=+1200/-600, allyScore≤400
+      // 能攻击且安全=2000, 能攻击但贴脸=400, 打不到人=-600
+      score = atkScore + safeScore + allyScore + focusBonus + bnBonus;
     } else if (role === 'crossbow') {
       // 弩兵：攻击 > 队友 > 安全（贴脸无所谓）
-      score = atkScore * 1.5 + allyScore + safeScore * 0.3 + focusBonus;
+      score = atkScore * 1.5 + allyScore + safeScore * 0.3 + focusBonus + bnBonus;
     } else if (role === 'cavalry' || role === 'flying') {
-      // 骑兵/空军：有攻击位 > 侧袭/背袭 > 队友
+      // 骑兵/空军：有攻击位是硬性条件，否则不移动
+      if (!canAttackAny) return;
+      // 有攻击位 > 侧袭/背袭 > 队友
       var flankScore = 0;
       if (az === 'rear') flankScore = 2000;
       else if (az === 'flank') flankScore = 1200;
@@ -1073,18 +1144,21 @@ function aiDecideMoveOptimize(aiUnit, enemies, allies, st) {
       if (strategy === 'legend' && AIState.commanderPlan && AIState.commanderPlan.tactic === 'focus_ranged') {
         flankScore += 500;
       }
-      score = atkScore + flankScore + allyScore * 0.3 + focusBonus;
-      if (!canAttackAny) return;
+      score = atkScore + flankScore + allyScore * 0.3 + focusBonus + bnBonus;
+      // 空军孤立惩罚：友军距离>3时大幅扣分，防止孤军深入被集火秒杀
+      if (role === 'flying' && isFinite(minAllyDist) && minAllyDist > 3) {
+        score -= (minAllyDist - 3) * 300;
+      }
     } else {
       // 步兵/野兽：队友 > 攻击 > 推进
       if (!canAttackAny) return;
-      score = allyScore * 2 + atkScore + focusBonus;
+      score = allyScore * 2 + atkScore + focusBonus + bnBonus;
       // Legend：步兵为远程让位（若友方远程被贴脸需撤退，让出通道加分）
       if (strategy === 'legend' && AIState.commanderPlan && AIState.commanderPlan.protectList.length > 0) {
         // 检查是否远离被保护的远程单位（让出通道）
         var protectBonus = 0;
         AIState.commanderPlan.protectList.forEach(function(pk) {
-          var prot = placedPieces[pk];
+          var prot = BoardAPI.getPiece(pk); // 使用 BoardAPI 解耦
           if (!prot || prot._routed) return;
           var dToProt = hDist(c.hex, prot.hex);
           if (dToProt >= 2) protectBonus += 30; // 离被保护单位远=让位
@@ -1093,7 +1167,7 @@ function aiDecideMoveOptimize(aiUnit, enemies, allies, st) {
         // 同时检查是否阻挡了被保护单位的撤退路径（远离敌人方向）
         // 简化处理：步兵若站在被保护单位与敌人之间且距离<=1，扣分
         AIState.commanderPlan.protectList.forEach(function(pk) {
-          var prot = placedPieces[pk];
+          var prot = BoardAPI.getPiece(pk); // 使用 BoardAPI 解耦
           if (!prot || prot._routed) return;
           enemies.forEach(function(e) {
             if (e.piece._routed) return;
@@ -1121,9 +1195,7 @@ function aiDecideMove(aiUnit, target, allies, enemies) {
   var config = AIState.config;
   var strategy = config ? config.moveStyle : 'toward';
   var st = getPieceStats(aiUnit.piece);
-  var configMax = config ? config.maxMoveSteps : 3;
-  var actualMove = st ? st.movement : 1;
-  var maxSteps = Math.min(configMax, actualMove);
+  var maxSteps = st ? st.movement : 1;
   var candidates = aiGetMoveCandidates(aiUnit, maxSteps);
   if (candidates.length === 0) return null;
 
@@ -1262,6 +1334,25 @@ function aiDecideMove(aiUnit, target, allies, enemies) {
     var atkScore = canAttackAny ? 1200 : -600;
     var focusBonus = (strategy === 'legend' && AIState.assignedTargets[target.key] && AIState.assignedTargets[target.key].count >= 1) ? 500 : 0;
 
+    // 通道评估：区分"战术卡位"（鼓励）和"钻入死胡同"（惩罚），仅地面单位
+    var bottleneckPenalty = 0;
+    if (role !== 'flying' && !canAttackAny) {
+      try {
+        var bnEval = aiEvaluatePositionBottleneck(c.hex, st, aiUnit, enemies);
+        if (bnEval.isTacticalChoke) {
+          bottleneckPenalty = 350;
+        } else if (bnEval.isDeadEnd) {
+          bottleneckPenalty = -500;
+          if (distToTarget > 3) bottleneckPenalty -= 300;
+        } else if (bnEval.isBottleneck) {
+          bottleneckPenalty = -200;
+          if (distToTarget > 3) bottleneckPenalty -= 200;
+        }
+      } catch(e) {
+        // 通道评估出错时忽略，不影响主流程
+      }
+    }
+
     // 方位（骑兵/空军用）
     var az = 'front';
     if (target.piece._facing !== undefined && typeof getAttackAzimuth === 'function') {
@@ -1271,30 +1362,34 @@ function aiDecideMove(aiUnit, target, allies, enemies) {
     var score = 0;
 
     if (role === 'bow') {
-      // 弓兵：不贴脸 > 攻击 > 队友（比例打分，贴脸+攻击 > 安全+打不到）
-      score = safeScore * 1.2 + atkScore + allyScore - distToTarget * 8 + focusBonus;
+      // 弓兵：攻击 > 安全 > 队友（修复：原safeScore*1.2导致弓兵宁可不攻击也要安全）
+      // 优先级：能攻击+安全 > 能攻击+贴脸 > 打不到+安全 > 打不到+贴脸
+      score = atkScore + safeScore + allyScore - distToTarget * 8 + focusBonus + bottleneckPenalty;
     } else if (role === 'crossbow') {
       // 弩兵：攻击 > 队友 > 不贴脸
-      score = atkScore * 1.5 + allyScore + safeScore * 0.3 - distToTarget * 6 + focusBonus;
+      score = atkScore * 1.5 + allyScore + safeScore * 0.3 - distToTarget * 6 + focusBonus + bottleneckPenalty;
     } else if (role === 'cavalry' || role === 'flying') {
       // 骑兵/空军：侧袭背袭 > 靠近 > 队友(次要)
       var flankScore = 0;
       if (az === 'rear') flankScore = 2000;
       else if (az === 'flank') flankScore = 1200;
-      if (role === 'flying') {
-        var tUD = unitDefByType(target.piece.unitType);
-        var tWpn = tUD && tUD.equipment && tUD.equipment.mainWeapon
-          ? (ED && ED.weapons ? ED.weapons.find(function(w) { return w.id === tUD.equipment.mainWeapon; }) : null) : null;
-        if (tWpn && (tWpn.type === 'bow' || tWpn.type === 'crossbow')) flankScore += 1000;
-      }
-      score = atkScore + flankScore + allyScore * 0.3 - distToTarget * 4 + focusBonus;
+      // 骑兵/空军切敌方远程兵加分（与 aiDecideMoveOptimize 统一）
+      var tUD = unitDefByType(target.piece.unitType);
+      var tWpn = tUD && tUD.equipment && tUD.equipment.mainWeapon
+        ? (ED && ED.weapons ? ED.weapons.find(function(w) { return w.id === tUD.equipment.mainWeapon; }) : null) : null;
+      if (tWpn && (tWpn.type === 'bow' || tWpn.type === 'crossbow')) flankScore += 1000;
+      score = atkScore + flankScore + allyScore * 0.3 - distToTarget * 4 + focusBonus + bottleneckPenalty;
       // 勇敢骑兵/飞兵：切后排加分（越靠近敌方远程单位分越高）
       if (backlineDist < Infinity) {
         score += (20 - backlineDist) * 40;
       }
+      // 空军孤立惩罚：友军距离>3时大幅扣分，防止孤军深入被集火秒杀
+      if (role === 'flying' && isFinite(minAllyDist) && minAllyDist > 3) {
+        score -= (minAllyDist - 3) * 300;
+      }
     } else {
       // 步兵/野兽：队友 > 攻击 > 推进
-      score = allyScore * 2 + atkScore - distToTarget * 6 + focusBonus;
+      score = allyScore * 2 + atkScore - distToTarget * 6 + focusBonus + bottleneckPenalty;
     }
 
     if (score > bestScore) { bestScore = score; best = c; }
@@ -1313,8 +1408,8 @@ function aiCanAttack(aiUnit, target, st) {
   // 弓兵惧怕近身：相邻有任一敌军→完全禁止攻击
   if (st && st.mainWeapon && st.mainWeapon.type === 'bow') {
     var bowBlocked = false;
-    Object.keys(placedPieces).forEach(function(k) {
-      var p = placedPieces[k];
+    // 使用 BoardAPI 解耦 遍历棋子
+    BoardAPI.forEach(function(p, k) {
       if (p.team !== aiUnit.piece.team && !p._routed && hDist(aiUnit.piece.hex, p.hex) <= 1) bowBlocked = true;
     });
     if (bowBlocked) return false;
@@ -1335,8 +1430,8 @@ function aiCalculateAggression(aiUnit, target, st) {
   // 士气低于10才考虑撤退，且必须是仍有友军存活时才允许撤（孤军作战不退）
   var hasLivingAllies = false;
   var currentMorale = aiUnit.piece._currentMorale;
-  Object.keys(placedPieces).forEach(function(k) {
-    var p = placedPieces[k];
+  // 使用 BoardAPI 解耦 遍历棋子
+  BoardAPI.forEach(function(p, k) {
     if (p.team === aiUnit.piece.team && !p._routed && p !== aiUnit.piece) hasLivingAllies = true;
   });
   if (currentMorale !== undefined && currentMorale < 10 && hasLivingAllies) aggression = -1;
@@ -1352,7 +1447,8 @@ function aiGetFlankingBonus(attacker, defender) {
     var nr = defender.piece.hex.r + d.r;
     var ns = defender.piece.hex.s + d.s;
     var nkey = nq + ',' + nr + ',' + ns;
-    if (placedPieces[nkey] && placedPieces[nkey].team === attacker.piece.team && !placedPieces[nkey]._routed) {
+    var _np = BoardAPI.getPiece(nkey); // 使用 BoardAPI 解耦
+    if (_np && _np.team === attacker.piece.team && !_np._routed) {
       sideAllyCount++;
     }
   }
@@ -1373,7 +1469,7 @@ function aiExecuteMove(aiUnit, moveTarget) {
   var oldHex = { q: aiUnit.piece.hex.q, r: aiUnit.piece.hex.r, s: aiUnit.piece.hex.s };
   var newHex = { q: moveTarget.hex.q, r: moveTarget.hex.r, s: moveTarget.hex.s };
   var movedDist = hDist(oldHex, newHex);
-  delete placedPieces[oldKey];
+  BoardAPI.removePiece(oldKey); // 使用 BoardAPI 解耦
   aiUnit.piece.hex = newHex;
   aiUnit.piece._actionUsedThisTurn = true;
   aiUnit.piece._didActionThisTurn = true;
@@ -1381,7 +1477,7 @@ function aiExecuteMove(aiUnit, moveTarget) {
   if (movedDist >= 1 && typeof getDirectionBetween === 'function') {
     aiUnit.piece._facing = getDirectionBetween(oldHex, newHex);
   }
-  placedPieces[newKey] = aiUnit.piece;
+  BoardAPI.addPiece(newKey, aiUnit.piece); // 使用 BoardAPI 解耦
   aiUnit.key = newKey;
   // ★ 启动移动动画：从 oldHex 插值到 newHex（260ms），修复敌方棋子瞬移问题
   // 动画系统通过 piece._animating 标记读取 _animFrom/_animTo，独立于 placedPieces 的键查找
@@ -1406,6 +1502,15 @@ function runAITurn(team) {
   var enemyTeam = (team === 'enemy') ? 'player' : 'enemy';
   if (TurnState.currentPlayer !== team || TurnState.phase !== 'battle') return;
 
+  // 如果是暂停恢复（_aiTurnActive 已经为 true），直接继续处理
+  var isResuming = TurnState._aiTurnActive === true;
+  if (isResuming) {
+    _setAITurnGuard();
+    setTimeout(function() { processNext(); }, battleDelay(250));
+    return;
+  }
+
+  // 新回合：初始化AI状态
   var duelDifficulty = TurnState.difficulty;
   if (TurnState.isDuelBattle && window._duelBattleData) {
     var duelSideData = (team === 'enemy') ? window._duelBattleData.sideB : window._duelBattleData.sideA;
@@ -1414,25 +1519,20 @@ function runAITurn(team) {
     }
   }
   initAIState(duelDifficulty);
-
-  // 如果是暂停恢复（_aiTurnActive 已经为 true），跳过 _actionUsedThisTurn 重置
-  var isResuming = TurnState._aiTurnActive === true;
-  if (!isResuming) {
-    TurnState._aiTurnActive = true;
-    Object.keys(placedPieces).forEach(function(key) {
-      var p = placedPieces[key];
-      if (p.team === team && !p._routed) {
-        p._actionUsedThisTurn = false;
-        p._attackedThisTick = false;
-        p._chargeDistance = 0;
-      }
-    });
-  }
+  TurnState._aiTurnActive = true;
+  // 使用 BoardAPI 解耦 遍历棋子
+  BoardAPI.forEach(function(p, key) {
+    if (p.team === team && !p._routed) {
+      p._actionUsedThisTurn = false;
+      p._attackedThisTick = false;
+      p._chargeDistance = 0;
+    }
+  });
 
   var enemyPieces = [];  // 注意：变量名沿用，实为 AI 己方棋子
   var playerPieces = [];  // 对方棋子（攻击目标）
-  Object.keys(placedPieces).forEach(function(key) {
-    var p = placedPieces[key];
+  // 使用 BoardAPI 解耦 遍历棋子
+  BoardAPI.forEach(function(p, key) {
     if (p._routed) return;
     if (p.team === team) {
       enemyPieces.push({ key: key, piece: p });
@@ -1478,6 +1578,8 @@ function runAITurn(team) {
     AIState.focusedTargetKey = commanderPlan.focusTargetKey;  // 兼容原有集火逻辑
   }
   var actionQueue = commanderPlan.actionOrder;
+  AIState.actionQueue = actionQueue;
+  AIState.actionIdx = 0;
 
   AIState.actedThisTurn.clear();
   AIState.assignedTargets = {};
@@ -1499,12 +1601,12 @@ function runAITurn(team) {
     }, 10000);
   }
 
-  var actionIdx = 0;
+  var actionIdx = AIState.actionIdx || 0;
 
   function getLiveEnemies() {
     var list = [];
-    Object.keys(placedPieces).forEach(function(key) {
-      var p = placedPieces[key];
+    // 使用 BoardAPI 解耦 遍历棋子
+    BoardAPI.forEach(function(p, key) {
       if (!p._routed && p.team === enemyTeam) {
         list.push({ key: key, piece: p });
       }
@@ -1515,10 +1617,16 @@ function runAITurn(team) {
   function processUnitWithAnim(unit, enemies, callback) {
     if (unit.piece._routed) { callback(); return; }
     var st = getPieceStats(unit.piece);
-    if (!st) { callback(); return; }
+    if (!st) {
+      if (console && console.warn) console.warn('[AI] 无法获取单位属性', unit.piece.unitType);
+      callback();
+      return;
+    }
 
     if (AIState.config.skipChance > 0 && Math.random() < AIState.config.skipChance) {
+      unit.piece._actionUsedThisTurn = true;
       AIState.actedThisTurn.add(unit.key);
+      if (typeof requestRender === 'function') requestRender();
       callback();
       return;
     }
@@ -1543,8 +1651,8 @@ function runAITurn(team) {
       // 士气<10撤退（但有可击杀目标时跳过撤退，优先击杀）
       var hasAlliesCheck = false;
       var curMorale = unit.piece._currentMorale;
-      Object.keys(placedPieces).forEach(function(k) {
-        var p = placedPieces[k];
+      // 使用 BoardAPI 解耦 遍历棋子
+      BoardAPI.forEach(function(p, k) {
         if (p.team === unit.piece.team && !p._routed && p !== unit.piece) hasAlliesCheck = true;
       });
       // 检查是否有可击杀目标，有则跳过撤退
@@ -1576,6 +1684,7 @@ function runAITurn(team) {
       // 简单难度：能打到就不动，直接攻击
       if (strategy === 'toward') {
         aiExecuteAttack(unit, immediateTarget);
+        unit.piece._actionUsedThisTurn = true;
         unit.piece._attackedThisTick = true;
         AIState.actedThisTurn.add(unit.key);
         checkAndTriggerVictory();
@@ -1614,6 +1723,7 @@ function runAITurn(team) {
 
       // 没有更好的位置→原地攻击
       aiExecuteAttack(unit, immediateTarget);
+      unit.piece._actionUsedThisTurn = true;
       unit.piece._attackedThisTick = true;
       AIState.actedThisTurn.add(unit.key);
       checkAndTriggerVictory();
@@ -1655,7 +1765,10 @@ function runAITurn(team) {
       return;
     }
 
+    // 无法移动也无法攻击→标记已行动（变暗但不打勾，因为未攻击）
+    unit.piece._actionUsedThisTurn = true;
     AIState.actedThisTurn.add(unit.key);
+    requestRender();
     callback();
   }
 
@@ -1674,16 +1787,18 @@ function runAITurn(team) {
       return;
     }
 
-    if (actionIdx >= actionQueue.length) {
+    if (actionIdx >= AIState.actionQueue.length) {
       _clearAITurnGuard();
+      TurnState._aiTurnActive = false;
       AIState.assignedTargets = {};
       requestRender();
       setTimeout(function() { endTurn(); }, battleDelay(500));
       return;
     }
 
-    var unit = actionQueue[actionIdx];
+    var unit = AIState.actionQueue[actionIdx];
     actionIdx++;
+    AIState.actionIdx = actionIdx;
 
     var enemies = getLiveEnemies();
     try {

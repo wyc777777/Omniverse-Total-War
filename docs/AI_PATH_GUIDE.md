@@ -10,7 +10,7 @@
 - [JS 文件 - 核心模块](#js-文件---核心模块)
 - [JS 文件 - AI 引擎系统](#js-文件---ai-引擎系统)
 - [JS 文件 - 动画系统](#js-文件---动画系统)
-- [JS 文件 - 备战席系统](#js-文件---备战席系统)
+- [JS 文件 - 部署系统](#js-文件---部署系统)
 - [JS 文件 - 战斗系统](#js-文件---战斗系统)
 - [JS 文件 - 数据引擎系统](#js-文件---数据引擎系统)
 - [JS 文件 - 装备效果配置](#js-文件---装备效果配置)
@@ -197,9 +197,9 @@ SummonAnimations 模块：
 
 ---
 
-## JS 文件 - 备战席系统
+## JS 文件 - 部署系统
 
-### js/bench.js
+### js/deployment.js
 
 **主要功能**：备战席系统，负责战斗前的单位放置准备。包含左右两个备战区（玩家/敌方），支持拖拽放置、槽位管理、单位放回等功能。
 
@@ -213,6 +213,14 @@ SummonAnimations 模块：
   - 内部函数 `createEmptySlot(ct, slotIdx, label)` — 创建空槽位
 - `getSlot(i)` — 根据索引获取槽位DOM元素
 - `returnToBench(i)` — 将单位放回备战席（恢复槽位可拖拽状态）
+
+**包含的函数（部署阶段）**：
+- `updateDeployUI()` — 更新部署阶段UI
+- `aiDeployPiece()` — ★AI部署一个单位（分难度策略）
+- `getSlotIndexInContainer(container, slotIdx)` — 获取容器中第N个槽位
+- `onPlayerPlacePiece()` — 玩家放置单位回调
+- `nextDeployPlayer()` — 下一个部署玩家
+- `tryEndDeploy()` — 尝试结束部署阶段
 
 ---
 
@@ -1016,8 +1024,6 @@ SummonAnimations 模块：
 - `showDiceResult(playerRoll, enemyRoll)` — 显示骰子结果
 
 **包含的函数（部署阶段）**：
-- `updateDeployUI()` — 更新部署阶段UI
-- `aiDeployPiece()` — ★AI部署一个单位（分难度策略）
 - `aiPickRanged(cands, playerHexes, enemyHexes)` — AI远程单位部署位置选择（困难+传说）
 - `aiPickFrontline(cands, playerHexes, enemyHexes)` — AI近战单位部署位置选择（困难+传说）
 - `aiLegendPick(...)` — 传说难度AI部署主调度器
@@ -1025,10 +1031,6 @@ SummonAnimations 模块：
 - `aiLegendPickCluster(cands, myHexes)` — 传说难度先手方第5+个单位部署（集群）
 - `aiLegendPickSecondMelee(cands, myHexes)` — 传说难度后手方近战部署（3-4环）
 - `aiLegendPickSecondRanged(cands, myHexes)` — 传说难度后手方远程部署（4-5环）
-- `getSlotIndexInContainer(container, slotIdx)` — 获取容器中第N个槽位
-- `onPlayerPlacePiece()` — 玩家放置单位回调
-- `nextDeployPlayer()` — 下一个部署玩家
-- `tryEndDeploy()` — 尝试结束部署阶段
 - `startBattlePhase()` — 开始战斗阶段
 
 **包含的函数（战斗回合）**：

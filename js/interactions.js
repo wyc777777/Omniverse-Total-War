@@ -41,35 +41,9 @@ function initInteractions() {
     if (placedPieces[key]) return;
 
     if (TurnState.phase === 'deploy') {
-      // 仅当前部署方（且非 AI 控制）的棋子可放置
-      if (d.team !== TurnState.currentPlayer) return;
-      if (isControlledByAI(TurnState.currentPlayer)) return;
-      // 中心一环以内禁止放置
-      if (hDist(h, {q:0,r:0,s:0}) <= 1) return;
-      // 不允许在敌人 2 格范围内放置
-      for (var pk in placedPieces) {
-        if (placedPieces[pk].team !== d.team && hDist(placedPieces[pk].hex, h) <= 2) {
-          if (typeof showToast === 'function') showToast('不能在敌人 2 格范围内放置！', 'warning');
-          return;
-        }
-      }
+      if (typeof handleDeployDrop === 'function' && handleDeployDrop(d, h, key)) return;
     }
     if (TurnState.phase === 'battle') return;
-
-    placedPieces[key] = { unitType: d.unitType, team: d.team, slotIdx: d.slotIdx, hex: { q: h.q, r: h.r, s: h.s } };
-    // 设置初始朝向（朝向棋盘中心）
-    placedPieces[key]._facing = getFacingToCenter(h);
-    initPieceRuntimeState(placedPieces[key]);
-    if (typeof startPlaceAnim === 'function') startPlaceAnim(key);
-    benchState[d.slotIdx] = false;
-    var sl = document.querySelectorAll('.bench-slot[data-slot-idx="' + d.slotIdx + '"]')[0];
-    if (sl) { sl.dataset.placed = 'true'; sl.classList.add('empty'); sl.draggable = false; }
-
-    if (TurnState.phase === 'deploy') {
-      onPlayerPlacePiece();
-    }
-
-    selectedPieceKey = null; updateMoveHint(); updateUnitCard(null); requestRender();
   };
   bdz.addEventListener('drop', _dropHandler);
 
@@ -104,7 +78,7 @@ function initInteractions() {
       updateMoveHint();
       requestRender();
       if (TurnState.phase === 'battle' && TurnState.currentPlayer !== 'player') return;
-      if (TurnState.phase === 'deploy') return;
+      if (Deployment.isDeployPhase()) return;
     }
 
     // === 战斗模式 ===
@@ -139,16 +113,12 @@ function initInteractions() {
     }
 
     // === 双击回收（仅部署阶段，仅玩家自己的棋子）===
-    if (dbl && placedPieces[key] && TurnState.phase === 'deploy' && placedPieces[key].team === 'player') {
-      if (typeof startRecycleAnim === 'function') startRecycleAnim(key);
-      var pc2 = placedPieces[key]; delete placedPieces[key]; returnToBench(pc2.slotIdx);
-      TurnState.deployCount.player--;
-      updateDeployUI();
-      deselectAll(); requestRender(); return;
+    if (dbl && TurnState.phase === 'deploy') {
+      if (typeof handleDeployRecycle === 'function' && handleDeployRecycle(key)) return;
     }
 
     // === 部署阶段：不能点已有的棋子移动 ===
-    if (TurnState.phase === 'deploy' && placedPieces[key]) {
+    if (Deployment.isDeployPhase() && placedPieces[key]) {
       selectedPieceKey = null; updateUnitCard(null); updateMoveHint(); requestRender(); return;
     }
 
@@ -162,7 +132,14 @@ function initInteractions() {
         if (sp2._actionUsedThisTurn) { deselectAll(); requestRender(); return; }
       }
       var sh2 = sp2.hex, ud2 = unitDefByType(sp2.unitType), st2 = ud2 ? computeStats(ud2) : null, r2 = st2 ? st2.movement : 1;
-      if (hDist(h, sh2) <= r2 && !(typeof isTerrainBlocked === 'function' && isTerrainBlocked(h))) {
+      var isFlying2 = st2 && st2.baseType === 'flying';
+      var reachable2 = getReachableHexes(sh2, r2, isFlying2, sp2.team);
+      var reachSet = {};
+      for (var rri = 0; rri < reachable2.length; rri++) {
+        var rh = reachable2[rri].hex;
+        reachSet[rh.q + ',' + rh.r + ',' + rh.s] = true;
+      }
+      if (reachSet[h.q + ',' + h.r + ',' + h.s]) {
         // 追击检查：离开前看是否有敌方近战在附近
         if (typeof tryOpportunityAttack === 'function') {
           tryOpportunityAttack(selectedPieceKey);
@@ -197,7 +174,7 @@ function initInteractions() {
     // === 选中棋子 ===
     if (placedPieces[key] && !placedPieces[key]._routed) {
       var tp2 = placedPieces[key];
-      if (TurnState.phase === 'deploy') { deselectAll(); requestRender(); return; }
+      if (Deployment.isDeployPhase()) { deselectAll(); requestRender(); return; }
       if (TurnState.phase === 'battle' && TurnState.currentPlayer === 'player') {
         if (tp2.team === 'player') {
           selectedPieceKey = (selectedPieceKey === key) ? null : key;

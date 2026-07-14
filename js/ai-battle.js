@@ -581,8 +581,8 @@ function buildAIBattlePage() {
   actions.className = 'ai-battle-actions';
   actions.innerHTML =
     '<button class="ai-btn ai-btn-primary" id="aiFindBtn">🔍 跨次元搜寻</button>' +
-    '<button class="ai-btn" id="duelModeBtn" style="background:#6b46c1;color:#fff;border-color:#553c9a;">🐛 斗蛐蛐模式</button>' +
-    '<button class="ai-btn ai-btn-back" onclick="showPage(\'Prep\')">← 返回</button>';
+    '<button class="ai-btn ai-btn-back" onclick="showPage(\'Prep\')">← 返回</button>' +
+    '<button class="ai-btn ai-btn-duel" id="duelModeBtn">🐛 斗蛐蛐模式</button>';
   wrap.appendChild(actions);
 
   // 对手展示区
@@ -1804,8 +1804,14 @@ function closeAIBattleSettlement(keepUnitIds) {
   AI_BATTLE_STATE.pendingBattle = false;
   window._aiBattleOpponent = null;
   if (typeof TurnState !== 'undefined') {
+    // isAIBattle 和 aiOpponent 是 AI 对战专用属性，TurnStateAPI 未覆盖，直接访问
     TurnState.isAIBattle = false;
     TurnState.aiOpponent = null;
+  }
+
+  // 清空历史栈（结算后不需要保留 Battle/Select/AIBattle 等临时页面的历史，避免返回时多次点击）
+  if (window.PanelManager && typeof PanelManager._clearHistory === 'function') {
+    PanelManager._clearHistory();
   }
 
   // 返回准备页
@@ -2155,10 +2161,11 @@ function startDuelBattle() {
     sideA: DUEL_STATE.sideA,
     sideB: DUEL_STATE.sideB
   };
-  if (typeof TurnState !== 'undefined') {
-    TurnState.isDuelBattle = true;
-    TurnState.sideAControlledByAI = !!DUEL_STATE.sideA.controlledByAI;
-    TurnState.sideBControlledByAI = !!DUEL_STATE.sideB.controlledByAI;
+  if (typeof TurnStateAPI !== 'undefined') {
+    // 使用 TurnStateAPI 解耦设置斗蛐蛐模式
+    TurnStateAPI.setDuelBattle(true);
+    TurnStateAPI.setSideControlled('player', !!DUEL_STATE.sideA.controlledByAI);
+    TurnStateAPI.setSideControlled('enemy', !!DUEL_STATE.sideB.controlledByAI);
   }
   // 设置 AI 难度：斗蛐蛐双方难度可能不同，取较高者作为全局兜底，实际部署/战斗时按侧读取
   var intelA = DUEL_STATE.sideA.intelligence || 'hard';
